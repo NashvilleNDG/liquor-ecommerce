@@ -101,7 +101,7 @@ export default function DealsAdminClient({ initialDeals }: Props) {
                 <div key={key}>
                   <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">{label}</label>
                   <input
-                    value={(form as Record<string, string>)[key]}
+                    value={(form as Record<string, unknown>)[key] as string}
                     onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                     placeholder={placeholder}
                     className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 placeholder-stone-400 outline-none focus:border-crimson transition-colors"
