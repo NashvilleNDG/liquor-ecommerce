@@ -5,7 +5,18 @@
 :root {
   --font-rubik: 'Rubik', sans-serif;
   --font-nunito: 'Nunito Sans', sans-serif;
+  --color-crimson: #C41E3A;
+  --color-crimson-dark: #A01830;
 }
+
+/* Crimson utility overrides (Tailwind needs these for arbitrary colors) */
+.text-crimson  { color: #C41E3A; }
+.bg-crimson    { background-color: #C41E3A; }
+.bg-crimson-dark { background-color: #A01830; }
+.border-crimson { border-color: #C41E3A; }
+.hover\:bg-crimson-dark:hover { background-color: #A01830; }
+.hover\:text-crimson:hover { color: #C41E3A; }
+.hover\:border-crimson:hover { border-color: #C41E3A; }
 
 body {
   font-family: var(--font-nunito), sans-serif;

@@ -35,6 +35,13 @@ const config: Config = {
           200:     "rgba(202,138,4,0.20)",
           300:     "rgba(202,138,4,0.30)",
         },
+        crimson: {
+          DEFAULT: "#C41E3A",
+          dark:    "#A01830",
+          light:   "#E8334F",
+          50:      "rgba(196,30,58,0.05)",
+          100:     "rgba(196,30,58,0.10)",
+        },
       },
       backdropBlur: {
         xs: "2px",

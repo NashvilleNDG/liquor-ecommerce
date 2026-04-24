@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { fetchProducts } from "@/lib/kanji-api";
 import { deduplicateByVariant, getBaseName } from "@/lib/product-variants";
 import ShopClient from "./ShopClient";
@@ -29,5 +30,9 @@ export default async function ShopPage() {
       .sort(),
   ];
 
-  return <ShopClient products={products} departments={departments} />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-stone-500">Loading…</div>}>
+      <ShopClient products={products} departments={departments} />
+    </Suspense>
+  );
 }

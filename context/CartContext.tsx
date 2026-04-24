@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useReducer, ReactNode } from "react";
+import { createContext, useContext, useReducer, useEffect, ReactNode } from "react";
 import type { Product } from "@/lib/kanji-api";
 
 export interface CartItem extends Product {
@@ -19,10 +19,13 @@ type Action =
   | { type: "CLEAR" }
   | { type: "TOGGLE_CART" }
   | { type: "OPEN_CART" }
-  | { type: "CLOSE_CART" };
+  | { type: "CLOSE_CART" }
+  | { type: "HYDRATE"; items: CartItem[] };
 
 function reducer(state: CartState, action: Action): CartState {
   switch (action.type) {
+    case "HYDRATE":
+      return { ...state, items: action.items };
     case "ADD": {
       const addQty = action.qty ?? 1;
       const existing = state.items.find((i) => i.ItemUPC === action.product.ItemUPC);
@@ -73,8 +76,35 @@ const CartContext = createContext<{
   dispatch: React.Dispatch<Action>;
 } | null>(null);
 
+const STORAGE_KEY = "srtb_cart";
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, { items: [], open: false });
+
+  // Restore cart from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const items: CartItem[] = JSON.parse(saved);
+        if (Array.isArray(items) && items.length > 0) {
+          dispatch({ type: "HYDRATE", items });
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // Persist cart items to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    } catch {
+      // ignore storage errors
+    }
+  }, [state.items]);
+
   return <CartContext.Provider value={{ state, dispatch }}>{children}</CartContext.Provider>;
 }
 

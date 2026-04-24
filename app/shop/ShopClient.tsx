@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  Search, X, SlidersHorizontal, ChevronDown, ChevronUp,
+  Search, X, ChevronDown, ChevronUp,
   Grid3X3, LayoutList, ArrowUpDown, Filter, Package
 } from "lucide-react";
 import type { Product } from "@/lib/kanji-api";
@@ -57,17 +58,30 @@ function FilterSection({
 }
 
 export default function ShopClient({ products, departments }: Props) {
-  const [search, setSearch]           = useState("");
-  const [dept, setDept]               = useState("ALL");
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [sort, setSort]               = useState("name");
-  const [minPrice, setMinPrice]       = useState("");
-  const [maxPrice, setMaxPrice]       = useState("");
+  const searchParams = useSearchParams();
+
+  const [search, setSearch]           = useState(searchParams.get("q") ?? "");
+  const [dept, setDept]               = useState(searchParams.get("dept") ?? "ALL");
+  const [inStockOnly, setInStockOnly] = useState(searchParams.get("instock") === "1");
+  const [sort, setSort]               = useState(searchParams.get("sort") ?? "name");
+  const [minPrice, setMinPrice]       = useState(searchParams.get("min") ?? "");
+  const [maxPrice, setMaxPrice]       = useState(searchParams.get("max") ?? "");
   const [page, setPage]               = useState(1);
   const [view, setView]               = useState<"grid" | "list">("grid");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Reset page on filter change
+  // Sync state whenever URL params change (e.g. clicking a nav link)
+  useEffect(() => {
+    setSearch(searchParams.get("q") ?? "");
+    setDept(searchParams.get("dept") ?? "ALL");
+    setInStockOnly(searchParams.get("instock") === "1");
+    setSort(searchParams.get("sort") ?? "name");
+    setMinPrice(searchParams.get("min") ?? "");
+    setMaxPrice(searchParams.get("max") ?? "");
+    setPage(1);
+  }, [searchParams]);
+
+  // Reset page on manual filter change
   useEffect(() => { setPage(1); }, [search, dept, inStockOnly, sort, minPrice, maxPrice]);
 
   const filtered = useMemo(() => {

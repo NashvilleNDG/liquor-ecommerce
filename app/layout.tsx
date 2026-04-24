@@ -2,9 +2,14 @@ import type { Metadata } from "next";
 import { Rubik, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
+import { RecentlyViewedProvider } from "@/context/RecentlyViewedContext";
+import { OrderHistoryProvider } from "@/context/OrderHistoryContext";
+import { LoyaltyProvider } from "@/context/LoyaltyContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import CartDrawer from "@/components/CartDrawer";
 import AgeVerification from "@/components/AgeVerification";
+import AuthProvider from "@/components/AuthProvider";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -19,21 +24,31 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "LiquorStore — Shop Online",
-  description: "Premium liquor, beer, and wine delivered to your door.",
+  title: "Stones River Total Beverages — Shop Online",
+  description: "Premium liquor, beer, wine and spirits in Murfreesboro, TN. 7,000+ products, same-day pickup.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${rubik.variable} ${nunitoSans.variable} font-sans bg-stone-50 dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100 min-h-screen antialiased transition-colors duration-200`}>
-        <ThemeProvider>
-          <CartProvider>
-            <AgeVerification />
-            <CartDrawer />
-            {children}
-          </CartProvider>
-        </ThemeProvider>
+      <body className={`${rubik.variable} ${nunitoSans.variable} font-sans bg-white text-stone-900 min-h-screen antialiased`}>
+        <AuthProvider>
+          <ThemeProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <RecentlyViewedProvider>
+                  <OrderHistoryProvider>
+                    <LoyaltyProvider>
+                      <AgeVerification />
+                      <CartDrawer />
+                      {children}
+                    </LoyaltyProvider>
+                  </OrderHistoryProvider>
+                </RecentlyViewedProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

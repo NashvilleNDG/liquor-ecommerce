@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, ArrowLeft, Package, Tag, Hash, Layers, Ruler, Minus, Plus } from "lucide-react";
 import type { Product } from "@/lib/kanji-api";
 import { useCart } from "@/context/CartContext";
+import { useRecentlyViewed } from "@/context/RecentlyViewedContext";
 import { getProductImage } from "@/lib/product-images";
 import DepartmentBadge from "@/components/DepartmentBadge";
 import ProductCard from "@/components/ProductCard";
@@ -20,7 +21,10 @@ export default function ProductDetail({
   related: Product[];
 }) {
   const { dispatch } = useCart();
+  const { addView } = useRecentlyViewed();
   const [qty, setQty] = useState(1);
+
+  useEffect(() => { addView(product.ItemUPC); }, [product.ItemUPC]); // eslint-disable-line react-hooks/exhaustive-deps
   const inStock  = Number(product.CurrentStock) > 0;
   const imageUrl = getProductImage(product.ItemUPC);
   const maxQty   = Math.min(Number(product.CurrentStock) || 99, 99);

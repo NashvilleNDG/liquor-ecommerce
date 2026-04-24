@@ -1,46 +1,47 @@
 "use client";
 
 import Link from "next/link";
-import { Wine, MapPin, Phone, Clock, Mail, Instagram, Facebook, Twitter } from "lucide-react";
+import { MapPin, Phone, Clock, Mail, Instagram, Facebook, Twitter } from "lucide-react";
 
 const HOURS = [
-  { day: "Mon – Thu", hours: "9:00 AM – 10:00 PM" },
-  { day: "Fri – Sat", hours: "9:00 AM – 11:00 PM" },
-  { day: "Sunday",    hours: "12:00 PM – 8:00 PM" },
+  { day: "Mon – Wed", hours: "8:00 AM – 11:00 PM" },
+  { day: "Thu",       hours: "7:00 AM – 1:30 AM"  },
+  { day: "Fri – Sat", hours: "8:00 AM – 1:30 AM"  },
+  { day: "Sunday",    hours: "10:00 AM – 10:00 PM" },
 ];
 
 const SHOP_LINKS = [
   { label: "All Products",  href: "/shop" },
-  { label: "Beer",          href: "/shop" },
   { label: "Wine",          href: "/shop" },
   { label: "Spirits",       href: "/shop" },
+  { label: "Beer",          href: "/shop" },
   { label: "CBD",           href: "/shop" },
-  { label: "Mixers",        href: "/shop" },
+  { label: "Staff Picks",   href: "/shop" },
+  { label: "On Sale",       href: "/shop" },
 ];
 
 const INFO_LINKS = [
-  { label: "About Us",       href: "#" },
-  { label: "Contact",        href: "#" },
-  { label: "Age Policy",     href: "#" },
-  { label: "Privacy Policy", href: "#" },
-  { label: "Terms of Use",   href: "#" },
+  { label: "About Us",        href: "#" },
+  { label: "Contact Us",      href: "#" },
+  { label: "Age Policy",      href: "#" },
+  { label: "Privacy Policy",  href: "#" },
+  { label: "Terms of Use",    href: "#" },
+  { label: "Return Policy",   href: "#" },
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-stone-900 dark:bg-stone-950 border-t border-stone-800 mt-auto">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-8 py-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+    <footer className="bg-stone-900 border-t border-stone-800 mt-auto">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-8 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
         {/* Brand */}
         <div className="space-y-5">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="bg-yellow-500 rounded-lg p-1.5">
-              <Wine size={18} className="text-stone-900" />
-            </div>
-            <span className="font-bold text-white text-lg">LiquorStore</span>
+          <Link href="/" className="block">
+            <div className="text-white font-heading font-extrabold text-xl tracking-wide">STONES RIVER</div>
+            <div className="text-crimson text-[10px] font-bold tracking-[0.3em] uppercase mt-0.5">TOTAL BEVERAGES</div>
           </Link>
           <p className="text-stone-400 text-sm leading-relaxed">
-            Your local premium spirits, beer &amp; wine destination. 7,000+ products, same-day pickup, fast delivery.
+            Your local premium spirits, beer &amp; wine destination in Murfreesboro, TN. 7,000+ products, same-day pickup, fast delivery.
           </p>
           <div className="flex items-center gap-3">
             {[
@@ -52,7 +53,7 @@ export default function Footer() {
                 key={label}
                 href="#"
                 aria-label={label}
-                className="bg-stone-800 hover:bg-yellow-500/20 hover:border-yellow-500/50 border border-stone-700 rounded-xl p-2 text-stone-400 hover:text-yellow-400 transition-all"
+                className="bg-stone-800 hover:bg-crimson border border-stone-700 rounded-lg p-2 text-stone-400 hover:text-white transition-all"
               >
                 <Icon size={16} />
               </a>
@@ -66,7 +67,7 @@ export default function Footer() {
           <ul className="space-y-2.5">
             {SHOP_LINKS.map(({ label, href }) => (
               <li key={label}>
-                <Link href={href} className="text-stone-400 hover:text-yellow-400 text-sm transition-colors">
+                <Link href={href} className="text-stone-400 hover:text-crimson text-sm transition-colors">
                   {label}
                 </Link>
               </li>
@@ -80,7 +81,7 @@ export default function Footer() {
           <ul className="space-y-2.5">
             {INFO_LINKS.map(({ label, href }) => (
               <li key={label}>
-                <a href={href} className="text-stone-400 hover:text-yellow-400 text-sm transition-colors">
+                <a href={href} className="text-stone-400 hover:text-crimson text-sm transition-colors">
                   {label}
                 </a>
               </li>
@@ -90,44 +91,47 @@ export default function Footer() {
 
         {/* Contact + Hours */}
         <div className="space-y-4">
-          <h3 className="text-white font-semibold text-sm uppercase tracking-wider">Contact</h3>
+          <h3 className="text-white font-semibold text-sm uppercase tracking-wider">Contact Us</h3>
           <ul className="space-y-3">
             <li className="flex items-start gap-2.5 text-sm text-stone-400">
-              <MapPin size={15} className="text-yellow-400 mt-0.5 flex-shrink-0" />
-              <span>123 Main Street<br />Your City, ST 00000</span>
+              <MapPin size={15} className="text-crimson mt-0.5 flex-shrink-0" />
+              <span>208 North Thompson Lane<br />Murfreesboro, TN 37129</span>
             </li>
-            <li className="flex items-center gap-2.5 text-sm text-stone-400">
-              <Phone size={15} className="text-yellow-400 flex-shrink-0" />
-              <span>(555) 123-4567</span>
+            <li>
+              <a href="tel:6158951888" className="flex items-center gap-2.5 text-sm text-stone-400 hover:text-crimson transition-colors">
+                <Phone size={15} className="text-crimson flex-shrink-0" />
+                (615) 895-1888
+              </a>
             </li>
-            <li className="flex items-center gap-2.5 text-sm text-stone-400">
-              <Mail size={15} className="text-yellow-400 flex-shrink-0" />
-              <span>hello@liquorstore.com</span>
+            <li>
+              <a href="mailto:stonesrivertotalbeverage@gmail.com" className="flex items-center gap-2.5 text-sm text-stone-400 hover:text-crimson transition-colors">
+                <Mail size={15} className="text-crimson flex-shrink-0" />
+                <span className="break-all">stonesrivertotalbeverage@gmail.com</span>
+              </a>
             </li>
           </ul>
 
           <div className="pt-2 space-y-2">
-            <div className="flex items-center gap-2 text-xs text-yellow-400 font-semibold uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs text-crimson font-semibold uppercase tracking-wider">
               <Clock size={12} />
-              Store Hours
+              Business Hours
             </div>
             {HOURS.map(({ day, hours }) => (
-              <div key={day} className="flex justify-between text-xs text-stone-500">
-                <span>{day}</span>
-                <span>{hours}</span>
+              <div key={day} className="flex justify-between text-xs text-stone-500 gap-3">
+                <span className="flex-shrink-0">{day}</span>
+                <span className="text-right">{hours}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="border-t border-stone-800 px-4 sm:px-8 py-4">
         <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-600">
-          <p>© {new Date().getFullYear()} LiquorStore. All rights reserved. Must be 21+ to purchase alcohol.</p>
+          <p>© {new Date().getFullYear()} Stones River Total Beverages. All rights reserved. Must be 21+ to purchase alcohol.</p>
           <div className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span>Live inventory sync via Kanji POS</span>
+            <span>Live inventory via Kanji POS</span>
           </div>
         </div>
       </div>
