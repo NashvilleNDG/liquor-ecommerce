@@ -95,7 +95,7 @@ export default function EventsAdminClient({ initialEvents }: Props) {
                   <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">{label}</label>
                   <input
                     type={type}
-                    value={(form as Record<string, string>)[key] ?? ""}
+                    value={((form as Record<string, unknown>)[key] ?? "") as string}
                     onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                     placeholder={placeholder}
                     className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 placeholder-stone-400 outline-none focus:border-crimson transition-colors"
@@ -190,7 +190,7 @@ export default function EventsAdminClient({ initialEvents }: Props) {
                           <label className="block text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-0.5">{label}</label>
                           <input
                             type={type ?? "text"}
-                            value={(ev as Record<string, string>)[key] ?? ""}
+                            value={((ev as Record<string, unknown>)[key] ?? "") as string}
                             onChange={(e) => updateField(ev.id, key as keyof Event, e.target.value)}
                             className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-stone-800 outline-none focus:border-crimson transition-colors"
                           />
