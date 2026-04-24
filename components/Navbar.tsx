@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 import {
   ShoppingCart, User, Search, Phone, Mail, MapPin,
-  ChevronDown, Menu, X, LayoutDashboard,
+  ChevronDown, Menu, X,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import SearchAutocomplete from "@/components/SearchAutocomplete";
@@ -108,7 +109,7 @@ const EXPLORE_MENU: Record<string, [string, string][]> = {
     ["Best Sellers",     "/shop?sort=stock_desc"],
     ["On Sale",          "/shop?sort=price_asc"],
     ["Under $20",        "/shop?max=20"],
-    ["Our Deals",        "/shop?sort=price_asc"],
+    ["Our Deals",        "/deals"],
   ],
   "Browse": [
     ["CBD",              "/shop?dept=CBD"],
@@ -215,143 +216,132 @@ export default function Navbar() {
   return (
     <>
       {/* ── Top contact bar ── */}
-      <div className="bg-black text-white text-xs">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-2 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-1 sm:gap-0">
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-0.5">
-            <a href="tel:6158951888" className="flex items-center gap-1.5 hover:text-crimson transition-colors">
-              <Phone size={11} /> (615) 895-1888
-            </a>
-            <a href="mailto:stonesrivertotalbeverage@gmail.com" className="flex items-center gap-1.5 hover:text-crimson transition-colors">
-              <Mail size={11} /> stonesrivertotalbeverage@gmail.com
-            </a>
-            <span className="hidden sm:flex items-center gap-1.5 text-stone-400">
-              <MapPin size={11} /> 208 North Thompson Lane, Murfreesboro, TN 37129
-            </span>
-          </div>
-          <Link href="/dashboard" className="hidden sm:flex items-center gap-1 text-stone-400 hover:text-white transition-colors">
-            <LayoutDashboard size={11} /> Admin
-          </Link>
+      <div className="bg-white border-b border-stone-200 text-stone-700 text-xs">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
+          <a href="tel:6158951888" className="flex items-center gap-1.5 hover:text-crimson transition-colors font-medium">
+            <Phone size={12} /> (615) 895-1888
+          </a>
+          <a href="mailto:stonesrivertotalbeverage@gmail.com" className="flex items-center gap-1.5 hover:text-crimson transition-colors font-medium">
+            <Mail size={12} /> stonesrivertotalbeverage@gmail.com
+          </a>
+          <span className="hidden sm:flex items-center gap-1.5">
+            <MapPin size={12} className="text-crimson" /> 208 North Thompson Lane, Murfreesboro, TN 37129
+          </span>
         </div>
       </div>
 
       {/* ── Main header ── */}
-      <div className="bg-black sticky top-0 z-40 shadow-lg">
+      <div className="bg-black sticky top-0 z-40 shadow-xl">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-20 gap-4">
+          <div className="grid grid-cols-3 items-center py-3 gap-4">
 
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMobileOpen((o) => !o)}
-              className="lg:hidden text-white hover:text-stone-300 transition-colors"
-              aria-label="Menu"
-            >
-              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
-            {/* Logo */}
-            <Link href="/" className="flex-1 lg:flex-none flex justify-center lg:justify-start">
-              <div className="text-center">
-                <div className="text-white font-heading font-extrabold text-xl sm:text-2xl tracking-wide leading-tight">
-                  STONES RIVER
-                </div>
-                <div className="text-crimson text-[10px] font-bold tracking-[0.25em] uppercase">
-                  TOTAL BEVERAGES
-                </div>
-              </div>
-            </Link>
-
-            {/* Right: Login + Cart + Search */}
+            {/* LEFT: Mobile hamburger */}
             <div className="flex items-center gap-3">
-              {session ? (
-                <div ref={userMenuRef} className="relative hidden sm:block">
-                  <button
-                    onClick={() => setUserMenuOpen((o) => !o)}
-                    className="flex items-center gap-2 text-white text-sm hover:text-stone-300 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-crimson border-2 border-crimson flex items-center justify-center text-white text-xs font-bold">
-                      {session.user?.name?.charAt(0).toUpperCase() ?? "U"}
-                    </div>
-                    <span className="text-xs hidden md:block">
-                      {session.user?.name?.split(" ")[0]}
-                    </span>
-                    <ChevronDown size={12} className={`transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {userMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden z-50">
-                      <Link
-                        href="/orders"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="block px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-crimson transition-colors"
-                      >
-                        My Orders
-                      </Link>
-                      <button
-                        onClick={() => { setUserMenuOpen(false); signOut({ callbackUrl: "/" }); }}
-                        className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-crimson transition-colors border-t border-stone-100"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  className="hidden sm:flex items-center gap-2 text-white text-sm hover:text-stone-300 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full border-2 border-stone-600 flex items-center justify-center">
-                    <User size={15} />
+              <button
+                onClick={() => setMobileOpen((o) => !o)}
+                className="lg:hidden text-white hover:text-stone-300 transition-colors"
+                aria-label="Menu"
+              >
+                {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+
+            {/* CENTER: Logo */}
+            <div className="flex justify-center">
+              <Link href="/">
+                <Image
+                  src="/logo.jpg"
+                  alt="Stones River Total Beverages"
+                  width={160}
+                  height={160}
+                  className="h-28 w-28 sm:h-36 sm:w-36 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-200"
+                  priority
+                />
+              </Link>
+            </div>
+
+            {/* RIGHT: Account + Cart + Search */}
+            <div className="flex flex-col items-end gap-2">
+              {/* Icons row */}
+              <div className="flex items-center gap-2">
+                {session ? (
+                  <div ref={userMenuRef} className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen((o) => !o)}
+                      className="flex items-center gap-2 text-white hover:text-stone-300 transition-colors"
+                    >
+                      <span className="hidden sm:block text-xs font-medium">
+                        {session.user?.name?.split(" ")[0]}
+                      </span>
+                      <div className="w-9 h-9 rounded-full bg-crimson flex items-center justify-center text-white text-sm font-bold">
+                        {session.user?.name?.charAt(0).toUpperCase() ?? "U"}
+                      </div>
+                      <ChevronDown size={12} className={`transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden z-50">
+                        <Link
+                          href="/orders"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="block px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-crimson transition-colors"
+                        >
+                          My Orders
+                        </Link>
+                        <button
+                          onClick={() => { setUserMenuOpen(false); signOut({ callbackUrl: "/" }); }}
+                          className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-crimson transition-colors border-t border-stone-100"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-xs hidden md:block">Login/Sign Up</span>
-                </Link>
-              )}
-
-              {/* Cart */}
-              <button
-                onClick={() => dispatch({ type: "TOGGLE_CART" })}
-                className="relative w-9 h-9 rounded-full border-2 border-stone-600 hover:border-crimson flex items-center justify-center text-white transition-colors"
-                aria-label="Cart"
-              >
-                <ShoppingCart size={15} />
-                {count > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-crimson text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {count > 9 ? "9+" : count}
-                  </span>
+                ) : (
+                  <Link href="/login" className="flex items-center gap-2 text-white hover:text-stone-300 transition-colors">
+                    <span className="hidden sm:block text-xs font-medium">Login/Sign Up</span>
+                    <div className="w-9 h-9 rounded-full bg-stone-700 hover:bg-crimson flex items-center justify-center transition-colors">
+                      <User size={16} />
+                    </div>
+                  </Link>
                 )}
-              </button>
 
-              {/* Search toggle */}
-              <button
-                onClick={() => setSearchOpen((o) => !o)}
-                className="w-9 h-9 rounded-full border-2 border-stone-600 hover:border-crimson flex items-center justify-center text-white transition-colors"
-                aria-label="Search"
-              >
-                <Search size={15} />
-              </button>
+                {/* Cart */}
+                <button
+                  onClick={() => dispatch({ type: "TOGGLE_CART" })}
+                  className="relative w-9 h-9 rounded-full bg-crimson hover:bg-crimson/80 flex items-center justify-center text-white transition-colors"
+                  aria-label="Cart"
+                >
+                  <ShoppingCart size={16} />
+                  {count > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-white text-crimson text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
+                      {count > 9 ? "9+" : count}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Search bar */}
+              <div className="hidden sm:block w-56 md:w-72">
+                <SearchAutocomplete placeholder="Search..." compact />
+              </div>
             </div>
+
           </div>
-
-          {/* Search bar (expandable) */}
-          {searchOpen && (
-            <div className="pb-3 max-w-2xl mx-auto w-full">
-              <SearchAutocomplete />
-            </div>
-          )}
         </div>
       </div>
 
       {/* ── Mega nav bar (desktop) ── */}
-      <nav className="hidden lg:block bg-white border-b border-stone-200 sticky top-20 z-30 shadow-sm">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center">
+      <nav className="hidden lg:block bg-white border-b border-stone-200 sticky top-[136px] z-30 shadow-sm">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center justify-center">
           <NavItem label="Home" href="/" />
           <NavItem label="Shop All" menu={SHOP_ALL_MENU} />
           <NavItem label="Wine" menu={WINE_MENU} />
           <NavItem label="Spirits" menu={SPIRITS_MENU} />
           <NavItem label="Beer" menu={BEER_MENU} />
-          <NavItem label="Our Deals" href="/shop?sort=price_asc" />
+          <NavItem label="Our Deals" href="/deals" />
           <NavItem label="Staff Picks" href="/shop?sort=stock_desc" />
           <NavItem label="On Sale" href="/shop?sort=price_asc&max=30" />
-          <NavItem label="Delivery" href="/delivery" />
+          <NavItem label="Tasting &amp; Events" href="/events" />
           <NavItem label="Explore" menu={EXPLORE_MENU} />
         </div>
       </nav>
@@ -361,13 +351,27 @@ export default function Navbar() {
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="bg-white w-80 max-w-full h-full overflow-y-auto shadow-2xl flex flex-col">
             <div className="bg-black px-5 py-4 flex items-center justify-between">
-              <div>
-                <div className="text-white font-heading font-extrabold text-lg">STONES RIVER</div>
-                <div className="text-crimson text-[9px] font-bold tracking-widest">TOTAL BEVERAGES</div>
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/logo.jpg"
+                  alt="Stones River Total Beverages"
+                  width={52}
+                  height={52}
+                  className="h-13 w-13 object-contain"
+                />
+                <div>
+                  <div className="text-white font-heading font-extrabold text-base leading-tight">STONES RIVER</div>
+                  <div className="text-crimson text-[9px] font-bold tracking-widest">TOTAL BEVERAGES</div>
+                </div>
               </div>
               <button onClick={() => setMobileOpen(false)} className="text-white">
                 <X size={22} />
               </button>
+            </div>
+
+            {/* Mobile search */}
+            <div className="px-4 pt-4">
+              <SearchAutocomplete placeholder="Search products..." autoFocus />
             </div>
 
             <div className="p-4 space-y-1 flex-1">
@@ -377,9 +381,10 @@ export default function Navbar() {
                 { label: "Wine",              href: "/shop?dept=Wines" },
                 { label: "Spirits",           href: "/shop?dept=LIQUOR" },
                 { label: "Beer",              href: "/shop?dept=BEER" },
-                { label: "Our Deals",         href: "/shop?sort=price_asc" },
+                { label: "Our Deals",         href: "/deals" },
                 { label: "Staff Picks",       href: "/shop?sort=stock_desc" },
                 { label: "On Sale",           href: "/shop?sort=price_asc&max=30" },
+                { label: "Tasting & Events",  href: "/events" },
                 { label: "New Arrivals",      href: "/shop?sort=name" },
                 { label: "Under $20",         href: "/shop?max=20" },
                 { label: "CBD & Mixers",      href: "/shop?dept=CBD" },
@@ -403,13 +408,6 @@ export default function Navbar() {
               <div className="flex items-center gap-2 text-sm text-stone-600">
                 <Mail size={14} className="text-crimson" /> stonesrivertotalbeverage@gmail.com
               </div>
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 text-sm text-stone-500 hover:text-crimson transition-colors"
-              >
-                <LayoutDashboard size={14} /> Admin Dashboard
-              </Link>
             </div>
           </div>
           <div className="flex-1 bg-black/50" onClick={() => setMobileOpen(false)} />

@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${rubik.variable} ${nunitoSans.variable} font-sans bg-white text-stone-900 min-h-screen antialiased`}>
+      <body suppressHydrationWarning className={`${rubik.variable} ${nunitoSans.variable} font-sans bg-white text-stone-900 min-h-screen antialiased`}>
         <AuthProvider>
           <ThemeProvider>
             <CartProvider>

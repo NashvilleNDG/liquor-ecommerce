@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Star, Heart } from "lucide-react";
@@ -12,21 +12,12 @@ import QuickViewModal from "@/components/QuickViewModal";
 
 type ProductWithVariants = Product & { _variantCount?: number };
 
-/* Generate a stable fake rating from the UPC string */
-function getRating(upc: string): { rating: number; count: number } {
-  let hash = 0;
-  for (let i = 0; i < upc.length; i++) hash = (hash * 31 + upc.charCodeAt(i)) >>> 0;
-  const rating = 3.5 + (hash % 15) / 10; // 3.5 – 4.9
-  const count  = 10 + (hash % 491);       // 10 – 500
-  return { rating: Math.round(rating * 10) / 10, count };
-}
-
 function StarRating({ rating, count }: { rating: number; count: number }) {
   const full = Math.floor(rating);
   const half = rating - full >= 0.5;
   return (
     <div className="flex items-center gap-1">
-      <span className="text-xs font-bold text-stone-700">{rating.toFixed(1)}</span>
+      <span className="text-xs font-bold text-stone-700 dark:text-stone-300">{rating.toFixed(1)}</span>
       <div className="flex items-center">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
@@ -34,10 +25,10 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
             size={11}
             className={
               i < full
-                ? "text-amber-400 fill-amber-400"
+                ? "text-crimson fill-crimson"
                 : i === full && half
-                ? "text-amber-400 fill-amber-200"
-                : "text-stone-300 fill-stone-200"
+                ? "text-crimson fill-crimson/30"
+                : "text-stone-200 fill-stone-200"
             }
           />
         ))}
@@ -52,18 +43,48 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
   const { dispatch: wDispatch, isWishlisted } = useWishlist();
   const [showQuickView, setShowQuickView] = useState(false);
   const wishlisted = isWishlisted(product.ItemUPC);
-  const stock        = Number(product.CurrentStock);
-  const inStock      = stock > 0;
-  const lowStock     = inStock && stock <= 5;
-  const imageUrl     = getProductImage(product.ItemUPC);
+  const stock = Number(product.CurrentStock);
+  const inStock = stock > 0;
+  const lowStock = inStock && stock <= 5;
   const variantCount = product._variantCount ?? 1;
-  const { rating, count } = getRating(product.ItemUPC);
+
+  // Image: start with static map, then lazy-load from CityHive
+  const staticImage = getProductImage(product.ItemUPC);
+  const [imageUrl, setImageUrl] = useState<string | null>(staticImage);
+  const [rating, setRating] = useState<{ rating: number; count: number } | null>(null);
+
+  useEffect(() => {
+    if (imageUrl) return; // already have one
+    fetch(`/api/cityhive/image?name=${encodeURIComponent(product.ItemName)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.imageUrl) setImageUrl(d.imageUrl);
+      })
+      .catch(() => {});
+  }, [product.ItemName]); // eslint-disable-line
+
+  // Stable fallback rating from UPC hash
+  const fallbackRating = (() => {
+    let hash = 0;
+    for (let i = 0; i < product.ItemUPC.length; i++)
+      hash = (hash * 31 + product.ItemUPC.charCodeAt(i)) >>> 0;
+    return { rating: Math.round((3.5 + (hash % 15) / 10) * 10) / 10, count: 10 + (hash % 491) };
+  })();
+
+  const displayRating = rating ?? fallbackRating;
+
+  const deptEmoji =
+    product.Department === "BEER" ? "🍺"
+    : product.Department === "Wines" || product.Department === "WINE" ? "🍷"
+    : product.Department === "LIQUOR" ? "🥃"
+    : product.Department === "CBD" ? "🌿"
+    : "📦";
 
   return (
-    <div className="group relative flex flex-col bg-white border border-stone-200 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:border-stone-300 hover:-translate-y-0.5">
+    <div className="group relative flex flex-col bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:border-stone-300 dark:hover:border-stone-700 hover:-translate-y-0.5">
 
       {/* Image area */}
-      <Link href={`/shop/${encodeURIComponent(product.ItemUPC)}`} className="block relative overflow-hidden bg-stone-50">
+      <Link href={`/shop/${encodeURIComponent(product.ItemUPC)}`} className="block relative overflow-hidden bg-stone-50 dark:bg-stone-800/50">
         <div className="relative h-44 flex items-center justify-center">
           {imageUrl ? (
             <Image
@@ -71,15 +92,11 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
               alt={product.ItemName}
               fill
               sizes="(max-width: 640px) 50vw, 200px"
-              className="object-contain p-4 group-hover:scale-105 transition-transform duration-400"
+              className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
             <span className="text-5xl group-hover:scale-110 transition-transform duration-300 select-none">
-              {product.Department === "BEER" ? "🍺"
-                : product.Department === "Wines" || product.Department === "WINE" ? "🍷"
-                : product.Department === "LIQUOR" ? "🥃"
-                : product.Department === "CBD" ? "🌿"
-                : "📦"}
+              {deptEmoji}
             </span>
           )}
 
@@ -106,16 +123,14 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
             </div>
           </div>
 
-          {/* Out of stock overlay */}
           {!inStock && (
-            <div className="absolute inset-0 bg-white/75 flex items-center justify-center">
-              <span className="text-xs font-semibold text-stone-500 bg-white border border-stone-300 px-3 py-1 rounded-full">
+            <div className="absolute inset-0 bg-white/75 dark:bg-stone-900/75 flex items-center justify-center">
+              <span className="text-xs font-semibold text-stone-500 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 px-3 py-1 rounded-full">
                 Out of Stock
               </span>
             </div>
           )}
 
-          {/* Quick View button */}
           <button
             onClick={(e) => { e.preventDefault(); setShowQuickView(true); }}
             className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-stone-800 text-[10px] font-bold px-3 py-1 rounded-full shadow border border-stone-200 whitespace-nowrap"
@@ -127,30 +142,25 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-3 gap-2">
+        <StarRating rating={displayRating.rating} count={displayRating.count} />
 
-        {/* Rating */}
-        <StarRating rating={rating} count={count} />
-
-        {/* Size / brand line */}
         <p className="text-[10px] text-stone-400 leading-none">
-          {variantCount > 1 ? `${variantCount} Options` : product.Size || ""}{" "}
-          {product.Department && <span className="text-stone-300">· {product.Department}</span>}
+          {variantCount > 1 ? `${variantCount} Options` : product.Size || ""}
+          {product.Department && <span className="text-stone-300"> · {product.Department}</span>}
         </p>
 
-        {/* Name */}
         <Link href={`/shop/${encodeURIComponent(product.ItemUPC)}`} className="flex-1">
-          <h3 className="text-sm font-semibold text-stone-800 leading-snug line-clamp-2 group-hover:text-crimson transition-colors">
+          <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-100 leading-snug line-clamp-2 group-hover:text-crimson transition-colors">
             {product.ItemName}
           </h3>
         </Link>
 
-        {/* Price + CTA */}
-        <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-stone-100">
+        <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-stone-100 dark:border-stone-800">
           <div>
             {variantCount > 1 && (
               <p className="text-[9px] text-stone-400 uppercase tracking-wider leading-none mb-0.5">from</p>
             )}
-            <span className="text-base font-bold text-stone-900">
+            <span className="text-base font-bold text-stone-900 dark:text-stone-100">
               ${Number(product.Price).toFixed(2)}
             </span>
           </div>
@@ -160,8 +170,8 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
             onClick={(e) => { e.preventDefault(); dispatch({ type: "ADD", product }); }}
             className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
               inStock
-                ? "bg-crimson hover:bg-crimson-dark text-white hover:shadow-md active:scale-95 cursor-pointer"
-                : "bg-stone-100 text-stone-400 cursor-not-allowed"
+                ? "bg-crimson hover:bg-crimson/90 text-white hover:shadow-md active:scale-95 cursor-pointer"
+                : "bg-stone-100 dark:bg-stone-800 text-stone-400 cursor-not-allowed"
             }`}
           >
             <ShoppingCart size={12} />

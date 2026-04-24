@@ -1,5 +1,6 @@
 import { fetchProducts } from "@/lib/kanji-api";
 import { getVariants, deduplicateByVariant } from "@/lib/product-variants";
+import { getCityHiveProductByName } from "@/lib/cityhive-api";
 import { notFound } from "next/navigation";
 import ProductDetail from "./ProductDetail";
 
@@ -13,10 +14,8 @@ export default async function ProductPage({ params }: { params: Promise<{ upc: s
 
   if (!product) notFound();
 
-  // All size variants of this product (excluding itself)
   const variants = getVariants(product, allProducts);
 
-  // Related products: deduplicated, same dept, different base name, limit 6
   const related = deduplicateByVariant(
     allProducts.filter(
       (p) =>
@@ -26,5 +25,8 @@ export default async function ProductPage({ params }: { params: Promise<{ upc: s
     )
   ).slice(0, 6);
 
-  return <ProductDetail product={product} variants={variants} related={related} />;
+  // Fetch CityHive enrichment (images, description, ABV, ratings, etc.)
+  const cityhive = await getCityHiveProductByName(product.ItemName).catch(() => null);
+
+  return <ProductDetail product={product} variants={variants} related={related} cityhive={cityhive} />;
 }

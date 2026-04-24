@@ -32,7 +32,7 @@ const INFO_LINKS = [
 export default function Footer() {
   return (
     <footer className="bg-stone-900 border-t border-stone-800 mt-auto">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-8 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
         {/* Brand */}
         <div className="space-y-5">
@@ -126,7 +126,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-stone-800 px-4 sm:px-8 py-4">
+      <div className="border-t border-stone-800 px-4 sm:px-6 py-4">
         <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-600">
           <p>© {new Date().getFullYear()} Stones River Total Beverages. All rights reserved. Must be 21+ to purchase alcohol.</p>
           <div className="flex items-center gap-1">

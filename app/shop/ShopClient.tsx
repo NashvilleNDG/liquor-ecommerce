@@ -7,12 +7,15 @@ import {
   Grid3X3, LayoutList, ArrowUpDown, Filter, Package
 } from "lucide-react";
 import type { Product } from "@/lib/kanji-api";
+import { inferOrigin, COUNTRY_CODE_TO_NAME, COUNTRY_FLAG } from "@/lib/product-origin";
+import { PAIRING_CATEGORIES, type PairingTagsMap } from "@/lib/pairing-categories";
 import ProductCard from "@/components/ProductCard";
 import ProductRow from "@/components/ProductRow";
 
 interface Props {
   products: (Product & { _variantCount?: number })[];
   departments: string[];
+  pairingTagsMap: PairingTagsMap;
 }
 
 const DEPT_META: Record<string, { label: string; icon: string }> = {
@@ -57,15 +60,17 @@ function FilterSection({
   );
 }
 
-export default function ShopClient({ products, departments }: Props) {
+export default function ShopClient({ products, departments, pairingTagsMap }: Props) {
   const searchParams = useSearchParams();
 
   const [search, setSearch]           = useState(searchParams.get("q") ?? "");
   const [dept, setDept]               = useState(searchParams.get("dept") ?? "ALL");
+  const [country, setCountry]         = useState(searchParams.get("country") ?? "");
   const [inStockOnly, setInStockOnly] = useState(searchParams.get("instock") === "1");
   const [sort, setSort]               = useState(searchParams.get("sort") ?? "name");
   const [minPrice, setMinPrice]       = useState(searchParams.get("min") ?? "");
   const [maxPrice, setMaxPrice]       = useState(searchParams.get("max") ?? "");
+  const [pairing, setPairing]         = useState(searchParams.get("pairing") ?? "");
   const [page, setPage]               = useState(1);
   const [view, setView]               = useState<"grid" | "list">("grid");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,15 +79,24 @@ export default function ShopClient({ products, departments }: Props) {
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "");
     setDept(searchParams.get("dept") ?? "ALL");
+    setCountry(searchParams.get("country") ?? "");
     setInStockOnly(searchParams.get("instock") === "1");
     setSort(searchParams.get("sort") ?? "name");
     setMinPrice(searchParams.get("min") ?? "");
     setMaxPrice(searchParams.get("max") ?? "");
+    setPairing(searchParams.get("pairing") ?? "");
     setPage(1);
   }, [searchParams]);
 
   // Reset page on manual filter change
-  useEffect(() => { setPage(1); }, [search, dept, inStockOnly, sort, minPrice, maxPrice]);
+  useEffect(() => { setPage(1); }, [search, dept, country, inStockOnly, sort, minPrice, maxPrice, pairing]);
+
+  // Resolve country code → full name for filtering (e.g. "US" → "United States")
+  const countryFullName = country && country !== "ALL"
+    ? (COUNTRY_CODE_TO_NAME[country] ?? country)
+    : "";
+
+  const activePairing = pairing ? PAIRING_CATEGORIES.find((c) => c.id === pairing) : null;
 
   const filtered = useMemo(() => {
     let r = products;
@@ -95,6 +109,15 @@ export default function ShopClient({ products, departments }: Props) {
         p.ItemUPC?.toString().includes(q)
       );
     }
+    if (countryFullName) {
+      r = r.filter((p) => {
+        const { country: c } = inferOrigin(p.ItemName?.toString() ?? "", p.Department ?? "");
+        return c === countryFullName;
+      });
+    }
+    if (pairing) {
+      r = r.filter((p) => pairingTagsMap[p.ItemUPC]?.includes(pairing));
+    }
     const lo = parseFloat(minPrice), hi = parseFloat(maxPrice);
     if (!isNaN(lo)) r = r.filter((p) => Number(p.Price) >= lo);
     if (!isNaN(hi)) r = r.filter((p) => Number(p.Price) <= hi);
@@ -105,15 +128,15 @@ export default function ShopClient({ products, departments }: Props) {
       if (sort === "stock_desc") return Number(b.CurrentStock) - Number(a.CurrentStock);
       return (a.ItemName?.toString() ?? "").localeCompare(b.ItemName?.toString() ?? "");
     });
-  }, [products, dept, inStockOnly, search, sort, minPrice, maxPrice]);
+  }, [products, dept, country, countryFullName, inStockOnly, search, sort, minPrice, maxPrice, pairing, pairingTagsMap]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const hasFilters = search || dept !== "ALL" || inStockOnly || sort !== "name" || minPrice || maxPrice;
+  const hasFilters = search || dept !== "ALL" || (country && country !== "ALL") || inStockOnly || sort !== "name" || minPrice || maxPrice || pairing;
 
   function resetAll() {
-    setSearch(""); setDept("ALL"); setInStockOnly(false);
-    setSort("name"); setMinPrice(""); setMaxPrice(""); setPage(1);
+    setSearch(""); setDept("ALL"); setCountry(""); setInStockOnly(false);
+    setSort("name"); setMinPrice(""); setMaxPrice(""); setPairing(""); setPage(1);
   }
 
   function scrollTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
@@ -230,12 +253,16 @@ export default function ShopClient({ products, departments }: Props) {
 
       {/* ── Page header ── */}
       <div className="border-b border-stone-200 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/40 backdrop-blur-sm">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-heading text-2xl font-bold text-stone-900 dark:text-white">Browse Products</h1>
+              <h1 className="font-heading text-2xl font-bold text-stone-900 dark:text-white">
+                {activePairing ? `${activePairing.emoji} Pairs with ${activePairing.label}` : "Browse Products"}
+              </h1>
               <p className="text-stone-500 text-sm mt-0.5">
-                {products.length.toLocaleString()} products across {departments.length} categories
+                {activePairing
+                  ? `Products that go great with ${activePairing.label.toLowerCase()}`
+                  : `${products.length.toLocaleString()} products across ${departments.length} categories`}
               </p>
             </div>
 
@@ -258,7 +285,7 @@ export default function ShopClient({ products, departments }: Props) {
         </div>
       </div>
 
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex gap-6 lg:gap-8">
 
           {/* ── Left sidebar (desktop) ── */}
@@ -289,7 +316,8 @@ export default function ShopClient({ products, departments }: Props) {
 
                 <span className="text-sm text-stone-500">
                   <span className="text-stone-900 dark:text-stone-200 font-semibold">{filtered.length.toLocaleString()}</span> results
-                  {dept !== "ALL" && <span className="text-amber-600 dark:text-yellow-500 ml-1">in {DEPT_META[dept]?.label ?? dept}</span>}
+                  {dept !== "ALL" && <span className="text-crimson ml-1">in {DEPT_META[dept]?.label ?? dept}</span>}
+                  {countryFullName && <span className="text-crimson ml-1">from {countryFullName}</span>}
                 </span>
 
                 {hasFilters && (
@@ -348,10 +376,22 @@ export default function ShopClient({ products, departments }: Props) {
             {/* Active filter chips */}
             {hasFilters && (
               <div className="flex flex-wrap gap-2">
+                {pairing && activePairing && (
+                  <span className="flex items-center gap-1.5 text-xs bg-orange-50 border border-orange-200 text-orange-700 px-3 py-1 rounded-full">
+                    {activePairing.emoji} Pairs with {activePairing.label}
+                    <button onClick={() => setPairing("")} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
                 {dept !== "ALL" && (
-                  <span className="flex items-center gap-1.5 text-xs bg-amber-50 dark:bg-yellow-500/10 border border-amber-200 dark:border-yellow-500/25 text-amber-700 dark:text-yellow-400 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs bg-red-50 border border-red-200 text-crimson px-3 py-1 rounded-full">
                     {DEPT_META[dept]?.icon} {DEPT_META[dept]?.label ?? dept}
-                    <button onClick={() => setDept("ALL")} className="hover:text-amber-900 dark:hover:text-yellow-200 cursor-pointer"><X size={10} /></button>
+                    <button onClick={() => setDept("ALL")} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
+                  </span>
+                )}
+                {countryFullName && (
+                  <span className="flex items-center gap-1.5 text-xs bg-red-50 border border-red-200 text-crimson px-3 py-1 rounded-full">
+                    {COUNTRY_FLAG[countryFullName] || "🌍"} {countryFullName}
+                    <button onClick={() => setCountry("")} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
                   </span>
                 )}
                 {inStockOnly && (

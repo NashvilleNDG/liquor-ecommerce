@@ -31,10 +31,10 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
             size={13}
             className={
               i < full
-                ? "text-amber-400 fill-amber-400"
+                ? "text-crimson fill-crimson"
                 : i === full && half
-                ? "text-amber-400 fill-amber-200"
-                : "text-stone-300 fill-stone-200"
+                ? "text-crimson fill-crimson/30"
+                : "text-stone-200 fill-stone-200"
             }
           />
         ))}

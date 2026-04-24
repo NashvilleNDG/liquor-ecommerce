@@ -5,6 +5,7 @@ import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NewsletterForm from "@/components/NewsletterForm";
+import CountryCarousel from "@/components/CountryCarousel";
 import { ArrowRight, ChevronRight } from "lucide-react";
 
 export const revalidate = 300;
@@ -34,26 +35,19 @@ function ProductRow({ products }: { products: ReturnType<typeof deduplicateByVar
   );
 }
 
-const COUNTRIES = [
-  { name: "Italy",        code: "IT", bg: "from-green-700 to-red-600"   },
-  { name: "France",       code: "FR", bg: "from-blue-800 to-blue-600"   },
-  { name: "Spain",        code: "ES", bg: "from-yellow-500 to-red-600"  },
-  { name: "USA",          code: "US", bg: "from-blue-700 to-red-700"    },
-  { name: "Australia",    code: "AU", bg: "from-blue-800 to-red-500"    },
-  { name: "South Africa", code: "ZA", bg: "from-green-700 to-yellow-600"},
-  { name: "Argentina",    code: "AR", bg: "from-sky-500 to-sky-700"     },
-  { name: "New Zealand",  code: "NZ", bg: "from-blue-900 to-red-600"    },
-];
-
 const PAIRINGS = [
-  { name: "Cheese",           emoji: "🧀", color: "bg-yellow-50 border-yellow-200" },
-  { name: "Meat",             emoji: "🥩", color: "bg-red-50 border-red-200" },
-  { name: "Poultry",          emoji: "🍗", color: "bg-orange-50 border-orange-200" },
-  { name: "Fish",             emoji: "🐟", color: "bg-blue-50 border-blue-200" },
-  { name: "Fruits & Veggies", emoji: "🥦", color: "bg-green-50 border-green-200" },
-  { name: "Dessert",          emoji: "🍰", color: "bg-pink-50 border-pink-200" },
-  { name: "Italian",          emoji: "🍝", color: "bg-amber-50 border-amber-200" },
-  { name: "Asian",            emoji: "🍜", color: "bg-rose-50 border-rose-200" },
+  { name: "Cheese",           img: "https://images.unsplash.com/photo-1452195100486-9cc805987862?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=cheese"         },
+  { name: "Meat",             img: "https://images.unsplash.com/photo-1558030006-450675393462?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=meat"           },
+  { name: "Poultry",          img: "https://images.unsplash.com/photo-1598103442097-8b74394b95c2?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=poultry"        },
+  { name: "Fish",             img: "https://images.unsplash.com/photo-1534482421-64566f976cfa?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=fish"           },
+  { name: "Fruits & Veggies", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=fruits_veggies" },
+  { name: "Dessert",          img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=dessert"        },
+  { name: "Italian",          img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=italian"        },
+  { name: "Asian",            img: "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=asian"          },
+  { name: "Mexican",          img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=mexican"        },
+  { name: "American",         img: "https://images.unsplash.com/photo-1550317138-10000687a72b?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=american"       },
+  { name: "Indian",           img: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=indian"         },
+  { name: "BBQ",              img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=bbq"            },
 ];
 
 const BRANDS = [
@@ -87,30 +81,39 @@ export default async function HomePage() {
     <>
       <Navbar />
 
-      {/* ── Hero 3-tile ── */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 h-48 sm:h-64">
-        {[
-          { label: "Shop Wine",    emoji: "🍷", bg: "bg-gradient-to-br from-purple-800 to-red-900",   dept: "Wines"  },
-          { label: "Shop Spirits", emoji: "🥃", bg: "bg-gradient-to-br from-stone-800 to-stone-950",  dept: "LIQUOR" },
-          { label: "Shop Beer",    emoji: "🍺", bg: "bg-gradient-to-br from-amber-700 to-amber-900",  dept: "BEER"   },
-        ].map(({ label, emoji, bg, dept }) => (
-          <Link
-            key={label}
-            href={`/shop?dept=${dept}`}
-            className={`${bg} group flex flex-col items-center justify-center gap-3 text-white transition-all hover:brightness-110 relative overflow-hidden`}
-          >
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-            <span className="relative text-5xl sm:text-6xl group-hover:scale-110 transition-transform duration-300 drop-shadow-2xl">{emoji}</span>
-            <p className="relative font-heading font-bold text-xl sm:text-2xl tracking-wide drop-shadow">{label}</p>
-          </Link>
-        ))}
-      </section>
+      {/* ── Page wrapper ── */}
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
 
-      {/* ── Promo banner ── */}
-      <div className="bg-crimson text-white text-center py-3 px-4">
-        <p className="text-sm font-semibold">
-          🎉 <span className="font-bold">Free Delivery</span> on orders $99+ · Same-day pickup available · Must be 21+
-        </p>
+        {/* ── Hero 3-tile ── */}
+        <section className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { label: "Shop Wine",    img: "/shop-wine.webp",    dept: "Wines"  },
+            { label: "Shop Spirits", img: "/shop-spirits.webp", dept: "LIQUOR" },
+            { label: "Shop Beer",    img: "/shop-beer.webp",    dept: "BEER"   },
+          ].map(({ label, img, dept }) => (
+            <Link
+              key={label}
+              href={`/shop?dept=${dept}`}
+              className="group relative bg-white flex items-center justify-center overflow-hidden rounded-xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow"
+              style={{ aspectRatio: "1002/434" }}
+            >
+              <img
+                src={img}
+                alt={label}
+                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-x-0 bottom-0 h-1 bg-crimson scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+            </Link>
+          ))}
+        </section>
+
+        {/* ── Promo banner ── */}
+        <div className="bg-crimson text-white text-center py-3 px-4 mt-4 rounded-lg">
+          <p className="text-sm font-semibold">
+            🎉 <span className="font-bold">Free Delivery</span> on orders $99+ · Same-day pickup available · Must be 21+
+          </p>
+        </div>
+
       </div>
 
       {/* ── Main content ── */}
@@ -126,19 +129,8 @@ export default async function HomePage() {
 
         {/* Countries */}
         <section>
-          <SectionHeading title="Shop by Country" href="/shop" />
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-            {COUNTRIES.map(({ name, code, bg }) => (
-              <Link
-                key={name}
-                href="/shop"
-                className={`flex-shrink-0 group flex flex-col items-center justify-center gap-1.5 w-28 h-24 rounded-xl bg-gradient-to-br ${bg} text-white shadow-md hover:shadow-xl hover:scale-105 transition-all`}
-              >
-                <span className="text-xl font-extrabold tracking-widest opacity-90">{code}</span>
-                <span className="text-xs font-semibold">{name}</span>
-              </Link>
-            ))}
-          </div>
+          <SectionHeading title="Countries" href="/shop?country=ALL" />
+          <CountryCarousel />
         </section>
 
         {/* New Arrivals */}
@@ -160,15 +152,23 @@ export default async function HomePage() {
         {/* Pairings */}
         <section>
           <SectionHeading title="Pairings" href="/shop" />
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-            {PAIRINGS.map(({ name, emoji, color }) => (
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+            {PAIRINGS.map(({ name, img, href }) => (
               <Link
                 key={name}
-                href="/shop"
-                className={`flex-shrink-0 flex flex-col items-center gap-2 w-24 h-24 rounded-xl border ${color} hover:shadow-md hover:scale-105 transition-all justify-center`}
+                href={href}
+                className="flex-shrink-0 group relative w-32 h-32 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
               >
-                <span className="text-3xl">{emoji}</span>
-                <span className="text-[11px] font-medium text-stone-600 text-center leading-tight">{name}</span>
+                <img
+                  src={img}
+                  alt={name}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <span className="absolute bottom-2 left-0 right-0 text-center text-white text-xs font-bold drop-shadow px-1 leading-tight">
+                  {name}
+                </span>
               </Link>
             ))}
           </div>
@@ -201,7 +201,7 @@ export default async function HomePage() {
         {/* Brands */}
         <section>
           <SectionHeading title="Brands" href="/shop" />
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
             {BRANDS.map(({ name, count, emoji }) => (
               <Link
                 key={name}

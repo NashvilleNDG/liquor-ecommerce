@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { fetchProducts } from "@/lib/kanji-api";
 import { deduplicateByVariant, getBaseName } from "@/lib/product-variants";
+import { readTags } from "@/lib/pairing-tags";
 import ShopClient from "./ShopClient";
 
 export const revalidate = 300;
@@ -30,9 +31,11 @@ export default async function ShopPage() {
       .sort(),
   ];
 
+  const pairingTagsMap = readTags();
+
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-stone-500">Loading…</div>}>
-      <ShopClient products={products} departments={departments} />
+      <ShopClient products={products} departments={departments} pairingTagsMap={pairingTagsMap} />
     </Suspense>
   );
 }

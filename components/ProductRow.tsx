@@ -75,7 +75,7 @@ export default function ProductRow({ product }: { product: ProductWithVariants }
           )}
         </div>
         <Link href={`/shop/${encodeURIComponent(product.ItemUPC)}`}>
-          <p className="text-sm font-semibold text-stone-800 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-yellow-400 transition-colors truncate">
+          <p className="text-sm font-semibold text-stone-800 dark:text-stone-100 group-hover:text-crimson transition-colors truncate">
             {product.ItemName}
           </p>
         </Link>
@@ -96,7 +96,7 @@ export default function ProductRow({ product }: { product: ProductWithVariants }
       {/* Price */}
       <div className="flex-shrink-0 text-right w-20">
         {variantCount > 1 && <p className="text-[10px] text-stone-400 dark:text-stone-600 leading-none mb-0.5">from</p>}
-        <p className="text-base font-bold text-amber-600 dark:text-yellow-400">${Number(product.Price).toFixed(2)}</p>
+        <p className="text-base font-bold text-crimson">${Number(product.Price).toFixed(2)}</p>
       </div>
 
       {/* Add to cart */}
@@ -105,7 +105,7 @@ export default function ProductRow({ product }: { product: ProductWithVariants }
         onClick={() => dispatch({ type: "ADD", product })}
         className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
           inStock
-            ? "bg-yellow-500 hover:bg-yellow-400 text-stone-900 hover:shadow-lg hover:shadow-yellow-500/20"
+            ? "bg-crimson hover:bg-crimson/90 text-white hover:shadow-lg hover:shadow-crimson/20"
             : "bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-600 cursor-not-allowed"
         }`}
       >

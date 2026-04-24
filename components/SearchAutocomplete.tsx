@@ -11,7 +11,13 @@ interface SearchResult {
   price: number;
 }
 
-export default function SearchAutocomplete() {
+interface Props {
+  placeholder?: string;
+  compact?: boolean;
+  autoFocus?: boolean;
+}
+
+export default function SearchAutocomplete({ placeholder = "Search spirits, beer, wine...", compact = false, autoFocus = false }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -32,10 +38,9 @@ export default function SearchAutocomplete() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Auto-focus on mount
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
 
   const fetchResults = useCallback(async (q: string) => {
     if (q.length < 2) {
@@ -100,8 +105,8 @@ export default function SearchAutocomplete() {
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Input row */}
-      <div className="flex items-center bg-white border border-stone-300 rounded-full px-4 py-2 gap-2 shadow-sm">
-        <Search size={15} className="text-stone-400 flex-shrink-0" />
+      <div className={`flex items-center bg-white border border-stone-300 rounded-full gap-2 shadow-sm ${compact ? "px-3 py-1.5" : "px-4 py-2"}`}>
+        <Search size={compact ? 13 : 15} className="text-stone-400 flex-shrink-0" />
         <input
           ref={inputRef}
           type="text"
@@ -109,8 +114,8 @@ export default function SearchAutocomplete() {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onFocus={() => { if (results.length > 0) setOpen(true); }}
-          placeholder="Search spirits, beer, wine..."
-          className="flex-1 bg-transparent text-stone-800 placeholder-stone-400 text-sm outline-none"
+          placeholder={placeholder}
+          className={`flex-1 bg-transparent text-stone-800 placeholder-stone-400 outline-none ${compact ? "text-xs" : "text-sm"}`}
         />
         {loading && (
           <span className="w-4 h-4 border-2 border-crimson border-t-transparent rounded-full animate-spin flex-shrink-0" />
