@@ -190,7 +190,7 @@ export default function EventsAdminClient({ initialEvents }: Props) {
                           <label className="block text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-0.5">{label}</label>
                           <input
                             type={type ?? "text"}
-                            value={((ev as Record<string, unknown>)[key] ?? "") as string}
+                            value={((ev as unknown as Record<string, unknown>)[key] ?? "") as string}
                             onChange={(e) => updateField(ev.id, key as keyof Event, e.target.value)}
                             className="w-full bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-stone-800 outline-none focus:border-crimson transition-colors"
                           />
