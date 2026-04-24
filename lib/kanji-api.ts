@@ -63,6 +63,7 @@ export async function fetchProducts(): Promise<Product[]> {
   try {
     const res = await fetch(`${base}/item?Key=${key}`, {
       next: { revalidate: 300 },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; LiquorStore/1.0)" },
     });
 
     if (!res.ok) {
