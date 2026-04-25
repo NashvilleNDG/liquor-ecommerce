@@ -53,15 +53,6 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
   const [imageUrl, setImageUrl] = useState<string | null>(staticImage);
   const [rating, setRating] = useState<{ rating: number; count: number } | null>(null);
 
-  useEffect(() => {
-    if (imageUrl) return; // already have one
-    fetch(`/api/cityhive/image?name=${encodeURIComponent(product.ItemName)}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.imageUrl) setImageUrl(d.imageUrl);
-      })
-      .catch(() => {});
-  }, [product.ItemName]); // eslint-disable-line
 
   // Stable fallback rating from UPC hash
   const fallbackRating = (() => {
@@ -73,12 +64,15 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
 
   const displayRating = rating ?? fallbackRating;
 
-  const deptEmoji =
-    product.Department === "BEER" ? "🍺"
-    : product.Department === "Wines" || product.Department === "WINE" ? "🍷"
-    : product.Department === "LIQUOR" ? "🥃"
-    : product.Department === "CBD" ? "🌿"
-    : "📦";
+  const DEPT_IMAGES: Record<string, string> = {
+    "BEER":     "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&h=400&fit=crop&q=80",
+    "Wines":    "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=400&fit=crop&q=80",
+    "WINE":     "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=400&fit=crop&q=80",
+    "LIQUOR":   "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&h=400&fit=crop&q=80",
+    "MIXERS":   "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=400&fit=crop&q=80",
+    "Soda":     "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400&h=400&fit=crop&q=80",
+  };
+  const deptFallback = DEPT_IMAGES[product.Department] ?? "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=400&fit=crop&q=80";
 
   return (
     <div className="group relative flex flex-col bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:border-stone-300 dark:hover:border-stone-700 hover:-translate-y-0.5">
@@ -95,9 +89,13 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
               className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <span className="text-5xl group-hover:scale-110 transition-transform duration-300 select-none">
-              {deptEmoji}
-            </span>
+            <Image
+              src={deptFallback}
+              alt={product.Department}
+              fill
+              sizes="(max-width: 640px) 50vw, 200px"
+              className="object-cover p-2 opacity-30 group-hover:scale-105 transition-transform duration-300"
+            />
           )}
 
           {/* Badges */}
