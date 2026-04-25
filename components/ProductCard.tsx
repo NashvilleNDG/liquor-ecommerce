@@ -5,12 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Star, Heart } from "lucide-react";
 import type { Product } from "@/lib/kanji-api";
-import { getProductImage } from "@/lib/product-images";
+
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import QuickViewModal from "@/components/QuickViewModal";
 
-type ProductWithVariants = Product & { _variantCount?: number };
+type ProductWithVariants = Product & { _variantCount?: number; _imageUrl?: string | null };
 
 function StarRating({ rating, count }: { rating: number; count: number }) {
   const full = Math.floor(rating);
@@ -48,9 +48,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
   const lowStock = inStock && stock <= 5;
   const variantCount = product._variantCount ?? 1;
 
-  // Image: start with static map, then lazy-load from CityHive
-  const staticImage = getProductImage(product.ItemUPC);
-  const [imageUrl, setImageUrl] = useState<string | null>(staticImage);
+  const [imageUrl, setImageUrl] = useState<string | null>(product._imageUrl ?? null);
   const [rating, setRating] = useState<{ rating: number; count: number } | null>(null);
 
 

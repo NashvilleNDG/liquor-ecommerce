@@ -2,7 +2,18 @@ import { Suspense } from "react";
 import { fetchProducts } from "@/lib/kanji-api";
 import { deduplicateByVariant, getBaseName } from "@/lib/product-variants";
 import { readTags } from "@/lib/pairing-tags";
+import { getProductImage } from "@/lib/product-images";
+import { existsSync, readFileSync } from "fs";
+import path from "path";
 import ShopClient from "./ShopClient";
+
+function loadImageCache(): Record<string, string | null> {
+  try {
+    const file = path.join(process.cwd(), "data", "product-images-cache.json");
+    if (!existsSync(file)) return {};
+    return JSON.parse(readFileSync(file, "utf-8"));
+  } catch { return {}; }
+}
 
 export const revalidate = 300;
 
@@ -20,9 +31,12 @@ export default async function ShopPage() {
   }
 
   // Show only the lowest-price variant per product group in the grid
+  const imageCache = loadImageCache();
+
   const products = deduplicateByVariant(allProducts.filter(p => !HIDDEN_DEPTS.includes(p.Department))).map((p) => ({
     ...p,
     _variantCount: variantCount.get(`${p.Department}::${getBaseName(p.ItemName)}`) ?? 1,
+    _imageUrl: getProductImage(p.ItemUPC) ?? imageCache[p.ItemUPC] ?? null,
   }));
 
   const departments = [
