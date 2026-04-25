@@ -140,11 +140,13 @@ export default function ProductDetail({
   variants,
   related,
   cityhive,
+  imageUrl,
 }: {
   product: Product;
   variants: Product[];
   related: Product[];
   cityhive: CityHiveProductDetails | null;
+  imageUrl?: string | null;
 }) {
   const { dispatch } = useCart();
   const { dispatch: wDispatch, isWishlisted } = useWishlist();
@@ -171,14 +173,14 @@ export default function ProductDetail({
   // All size variants sorted by price
   const allSizes = [product, ...variants].sort((a, b) => Number(a.Price) - Number(b.Price));
 
-  // Images
-  const primaryImage = cityhive?.images?.primary?.large || cityhive?.images?.primary?.original || null;
+  // Images — use cache/static image, fall back to cityhive if available
+  const primaryImage = imageUrl || cityhive?.images?.primary?.large || cityhive?.images?.primary?.original || null;
   const moreImages: string[] = (cityhive?.images?.more_images || [])
     .map((img) => img.large || img.original)
     .filter(Boolean) as string[];
   const allImages = [primaryImage, ...moreImages].filter(Boolean) as string[];
   const thumbImages: string[] = [
-    cityhive?.images?.primary?.medium || primaryImage,
+    imageUrl || cityhive?.images?.primary?.medium || primaryImage,
     ...(cityhive?.images?.more_images || []).map((img) => img.medium || img.thumbnail || img.small).filter(Boolean),
   ].filter(Boolean) as string[];
 

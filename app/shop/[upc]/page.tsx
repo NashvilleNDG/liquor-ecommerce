@@ -1,10 +1,20 @@
 import { fetchProducts } from "@/lib/kanji-api";
 import { getVariants, deduplicateByVariant } from "@/lib/product-variants";
-import { getCityHiveProductByName } from "@/lib/cityhive-api";
+import { getProductImage } from "@/lib/product-images";
+import { existsSync, readFileSync } from "fs";
+import path from "path";
 import { notFound } from "next/navigation";
 import ProductDetail from "./ProductDetail";
 
 export const revalidate = 300;
+
+function loadImageCache(): Record<string, string | null> {
+  try {
+    const file = path.join(process.cwd(), "data", "product-images-cache.json");
+    if (!existsSync(file)) return {};
+    return JSON.parse(readFileSync(file, "utf-8"));
+  } catch { return {}; }
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ upc: string }> }) {
   const { upc: rawUpc } = await params;
@@ -25,8 +35,8 @@ export default async function ProductPage({ params }: { params: Promise<{ upc: s
     )
   ).slice(0, 6);
 
-  // Fetch CityHive enrichment (images, description, ABV, ratings, etc.)
-  const cityhive = await getCityHiveProductByName(product.ItemName).catch(() => null);
+  const imageCache = loadImageCache();
+  const imageUrl = getProductImage(upc) ?? imageCache[upc] ?? null;
 
-  return <ProductDetail product={product} variants={variants} related={related} cityhive={cityhive} />;
+  return <ProductDetail product={product} variants={variants} related={related} cityhive={null} imageUrl={imageUrl} />;
 }
