@@ -7,7 +7,7 @@ import ShopClient from "./ShopClient";
 export const revalidate = 300;
 
 const DEPT_ORDER = ["BEER", "Wines", "LIQUOR", "CBD", "Cigarette", "CIGARS", "Soda", "MIXERS"];
-const HIDDEN_DEPTS = ["DELIVERY FEE", "GROCERY", "Kegs", "KEG", "NOVELTY", "PROMOCODE", "Tobacco", "TOBACCO", "CBD", "THC"];
+const HIDDEN_DEPTS = ["DELIVERY FEE", "GROCERY", "Kegs", "KEG", "NOVELTY", "PROMOCODE", "Tobacco", "TOBACCO", "CBD", "THC", "Cigarette", "CIGARETTE", "CIGARS", "Cigars", "CIGAR", "Vape", "VAPE", "E-Cigarette", "E-CIGARETTE"];
 
 export default async function ShopPage() {
   const allProducts = await fetchProducts();
