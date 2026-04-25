@@ -19,6 +19,22 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "i5.walmartimages.com",
+      },
+      {
+        protocol: "https",
+        hostname: "i8.walmartimages.com",
+      },
+      {
+        protocol: "https",
+        hostname: "scene7.samsclub.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.walmartimages.com",
+      },
     ],
   },
 };
