@@ -7,6 +7,7 @@ import ShopClient from "./ShopClient";
 export const revalidate = 300;
 
 const DEPT_ORDER = ["BEER", "Wines", "LIQUOR", "CBD", "Cigarette", "CIGARS", "Soda", "MIXERS"];
+const HIDDEN_DEPTS = ["DELIVERY FEE", "GROCERY", "Kegs", "KEG", "NOVELTY", "PROMOCODE", "Tobacco", "TOBACCO"];
 
 export default async function ShopPage() {
   const allProducts = await fetchProducts();
@@ -19,7 +20,7 @@ export default async function ShopPage() {
   }
 
   // Show only the lowest-price variant per product group in the grid
-  const products = deduplicateByVariant(allProducts).map((p) => ({
+  const products = deduplicateByVariant(allProducts.filter(p => !HIDDEN_DEPTS.includes(p.Department))).map((p) => ({
     ...p,
     _variantCount: variantCount.get(`${p.Department}::${getBaseName(p.ItemName)}`) ?? 1,
   }));
