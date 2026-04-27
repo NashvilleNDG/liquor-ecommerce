@@ -554,7 +554,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
   );
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-[#0C0A09]">
+    <div className="min-h-screen bg-white dark:bg-[#0C0A09]">
 
       {/* ── Page header ── */}
       <div className="border-b border-stone-200 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/40 backdrop-blur-sm">
