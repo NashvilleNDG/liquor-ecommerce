@@ -1,5 +1,5 @@
 /**
- * Fetches product images from UPC Item DB (free trial: 100 requests/day)
+ * Fetches product images from Go-UPC API
  * Run: node scripts/fetch-product-images.mjs
  *
  * Saves results to data/product-images-cache.json
@@ -11,10 +11,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(__dirname, "..");
+const ROOT       = path.join(__dirname, "..");
 const CACHE_FILE = path.join(ROOT, "data", "product-images-cache.json");
-const KANJI_KEY = "78065";
-const KANJI_URL = `https://kanjiapi.com/kanjiapi/api/item?Key=${KANJI_KEY}`;
+
+const GO_UPC_KEY = "ed5826eaad4f987908d56ef042f675e51d216d39c3a1f2aeb477a8ef54528bfd";
+const KANJI_URL  = "https://kanjiapi.com/kanjiapi/api/item?Key=78065";
 
 const HIDDEN_DEPTS = [
   "DELIVERY FEE", "GROCERY", "Kegs", "KEG", "NOVELTY", "PROMOCODE",
@@ -22,12 +23,10 @@ const HIDDEN_DEPTS = [
   "CIGARS", "Cigars", "CIGAR", "Vape", "VAPE", "E-Cigarette", "E-CIGARETTE",
 ];
 
-const LIMIT = 100; // free plan daily limit
-const DELAY_MS = 800; // be polite to the API
+const LIMIT    = 150; // Go-UPC credits available
+const DELAY_MS = 600; // max 2 req/sec — stay safe at ~1.6/sec
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function loadCache() {
   if (!existsSync(CACHE_FILE)) return {};
@@ -38,18 +37,20 @@ function saveCache(cache) {
   writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2), "utf-8");
 }
 
-async function lookupUPC(upc) {
+async function lookupGoUPC(upc) {
   try {
-    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`, {
+    const res = await fetch(`https://go-upc.com/api/v1/code/${upc}?key=${GO_UPC_KEY}`, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; LiquorStore/1.0)" },
     });
-    if (!res.ok) return null;
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      console.error(`  HTTP ${res.status}`);
+      return null;
+    }
     const data = await res.json();
-    const item = data?.items?.[0];
-    if (!item) return null;
-    const image = item.images?.[0] ?? null;
-    return image;
-  } catch {
+    return data?.product?.imageUrl ?? null;
+  } catch (e) {
+    console.error("  Error:", e.message);
     return null;
   }
 }
@@ -63,31 +64,31 @@ async function main() {
   const allProducts = await res.json();
 
   const products = allProducts
-    .filter((p) => Number(p.CurrentStock) > 0)
-    .filter((p) => !HIDDEN_DEPTS.includes(p.Department));
+    .filter(p => Number(p.CurrentStock) > 0)
+    .filter(p => !HIDDEN_DEPTS.includes(p.Department))
+    .filter(p => /^\d{8,14}$/.test(p.ItemUPC)); // real UPCs only
 
   console.log(`Total eligible products: ${products.length}`);
 
   const cache = loadCache();
-  const alreadyCached = Object.keys(cache).length;
-  console.log(`Already cached: ${alreadyCached} images`);
+  const alreadyCached = Object.keys(cache).filter(k => cache[k] !== null).length;
+  console.log(`Already have images: ${alreadyCached}`);
 
-  const todo = products
-    .filter((p) => /^\d{8,14}$/.test(p.ItemUPC)) // real UPCs only
-    .filter((p) => !(p.ItemUPC in cache));         // not already cached
+  // Skip already tried (null or found), only do untried UPCs
+  const todo  = products.filter(p => !(p.ItemUPC in cache));
   const batch = todo.slice(0, LIMIT);
 
-  console.log(`Fetching images for ${batch.length} products (limit: ${LIMIT}/day)...\n`);
+  console.log(`\nLooking up ${batch.length} products via Go-UPC (limit: ${LIMIT})...\n`);
 
-  let found = 0;
+  let found    = 0;
   let notFound = 0;
 
   for (let i = 0; i < batch.length; i++) {
     const p = batch[i];
-    process.stdout.write(`[${i + 1}/${batch.length}] ${p.ItemName.slice(0, 50).padEnd(50)} `);
+    process.stdout.write(`[${i + 1}/${batch.length}] ${p.ItemName.slice(0, 45).padEnd(45)} `);
 
-    const image = await lookupUPC(p.ItemUPC);
-    cache[p.ItemUPC] = image; // store null if not found so we skip next time
+    const image = await lookupGoUPC(p.ItemUPC);
+    cache[p.ItemUPC] = image;
 
     if (image) {
       found++;
@@ -101,9 +102,10 @@ async function main() {
     if (i < batch.length - 1) await sleep(DELAY_MS);
   }
 
-  console.log(`\nDone! ✓ ${found} images found, ✗ ${notFound} not found`);
+  const totalWithImages = Object.values(cache).filter(v => v !== null).length;
+  console.log(`\n✓ ${found} new images found, ✗ ${notFound} not found`);
+  console.log(`Total products with images: ${totalWithImages}`);
   console.log(`Cache saved to data/product-images-cache.json`);
-  console.log(`Total cached entries: ${Object.keys(cache).length}`);
 }
 
 main().catch(console.error);
