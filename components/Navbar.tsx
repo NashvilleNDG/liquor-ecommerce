@@ -96,10 +96,10 @@ const BEER_MENU: Record<string, [string, string][]> = {
 
 const SHOP_ALL_MENU: Record<string, [string, string][]> = {
   "Shop by Brand": [
-    ["All Products",    "/shop"],
-    ["Wine",            "/shop?dept=Wines"],
-    ["Spirits",         "/shop?dept=LIQUOR"],
-    ["Beer",            "/shop?dept=BEER"],
+    ["All Brands",      "/brands"],
+    ["Wine Brands",     "/brands?dept=Wines"],
+    ["Spirits Brands",  "/brands?dept=LIQUOR"],
+    ["Beer Brands",     "/brands?dept=BEER"],
   ],
 };
 
@@ -112,10 +112,7 @@ const EXPLORE_MENU: Record<string, [string, string][]> = {
     ["Our Deals",        "/deals"],
   ],
   "Browse": [
-    ["CBD",              "/shop?dept=CBD"],
     ["Mixers",           "/shop?dept=MIXERS"],
-    ["Cigars",           "/shop?dept=CIGARS"],
-    ["Cigarettes",       "/shop?dept=Cigarette"],
   ],
 };
 
@@ -163,7 +160,7 @@ function NavItem({ label, menu, href }: { label: string; menu?: MenuData; href?:
     return (
       <Link
         href={href ?? "/shop"}
-        className="px-3 py-5 text-sm font-medium text-stone-700 hover:text-crimson border-b-2 border-transparent hover:border-crimson transition-all whitespace-nowrap"
+        className="px-3 py-5 text-sm font-bold text-stone-700 hover:text-crimson border-b-2 border-transparent hover:border-crimson transition-all whitespace-nowrap"
       >
         {label}
       </Link>
@@ -178,7 +175,7 @@ function NavItem({ label, menu, href }: { label: string; menu?: MenuData; href?:
       onMouseLeave={() => setOpen(false)}
     >
       <button
-        className={`flex items-center gap-1 px-3 py-5 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+        className={`flex items-center gap-1 px-3 py-5 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${
           open
             ? "text-crimson border-crimson"
             : "text-stone-700 hover:text-crimson border-transparent hover:border-crimson"
@@ -218,13 +215,13 @@ export default function Navbar() {
       {/* ── Top contact bar ── */}
       <div className="bg-white border-b border-stone-200 text-stone-700 text-xs">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
-          <a href="tel:6158951888" className="flex items-center gap-1.5 hover:text-crimson transition-colors font-medium">
+          <a href="tel:6158951888" className="flex items-center gap-1.5 hover:text-crimson transition-colors font-bold">
             <Phone size={12} /> (615) 895-1888
           </a>
-          <a href="mailto:stonesrivertotalbeverage@gmail.com" className="flex items-center gap-1.5 hover:text-crimson transition-colors font-medium">
+          <a href="mailto:stonesrivertotalbeverage@gmail.com" className="flex items-center gap-1.5 hover:text-crimson transition-colors font-bold">
             <Mail size={12} /> stonesrivertotalbeverage@gmail.com
           </a>
-          <span className="hidden sm:flex items-center gap-1.5">
+          <span className="hidden sm:flex items-center gap-1.5 font-bold">
             <MapPin size={12} className="text-crimson" /> 208 North Thompson Lane, Murfreesboro, TN 37129
           </span>
         </div>
@@ -252,9 +249,9 @@ export default function Navbar() {
                 <Image
                   src="/logo.jpg"
                   alt="Stones River Total Beverages"
-                  width={160}
-                  height={160}
-                  className="h-28 w-28 sm:h-36 sm:w-36 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-200"
+                  width={192}
+                  height={192}
+                  className="h-[134px] w-[134px] sm:h-[173px] sm:w-[173px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-200"
                   priority
                 />
               </Link>
@@ -298,9 +295,9 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <Link href="/login" className="flex items-center gap-2 text-white hover:text-stone-300 transition-colors">
-                    <span className="hidden sm:block text-xs font-medium">Login/Sign Up</span>
-                    <div className="w-9 h-9 rounded-full bg-stone-700 hover:bg-crimson flex items-center justify-center transition-colors">
-                      <User size={16} />
+                    <span className="hidden sm:block text-sm font-bold">Login/Sign Up</span>
+                    <div className="w-11 h-11 rounded-full bg-stone-700 hover:bg-crimson flex items-center justify-center transition-colors">
+                      <User size={19} />
                     </div>
                   </Link>
                 )}
@@ -308,10 +305,10 @@ export default function Navbar() {
                 {/* Cart */}
                 <button
                   onClick={() => dispatch({ type: "TOGGLE_CART" })}
-                  className="relative w-9 h-9 rounded-full bg-crimson hover:bg-crimson/80 flex items-center justify-center text-white transition-colors"
+                  className="relative w-11 h-11 rounded-full bg-crimson hover:bg-crimson/80 flex items-center justify-center text-white transition-colors"
                   aria-label="Cart"
                 >
-                  <ShoppingCart size={16} />
+                  <ShoppingCart size={19} />
                   {count > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 bg-white text-crimson text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
                       {count > 9 ? "9+" : count}
@@ -321,7 +318,7 @@ export default function Navbar() {
               </div>
 
               {/* Search bar */}
-              <div className="hidden sm:block w-56 md:w-72">
+              <div className="hidden sm:block w-64 md:w-80 lg:w-96">
                 <SearchAutocomplete placeholder="Search..." compact />
               </div>
             </div>
@@ -394,7 +391,7 @@ export default function Navbar() {
                   key={label}
                   href={href}
                   onClick={() => setMobileOpen(false)}
-                  className="block px-4 py-3 text-sm font-medium text-stone-700 hover:text-crimson hover:bg-red-50 rounded-lg transition-colors border-b border-stone-100"
+                  className="block px-4 py-3 text-sm font-bold text-stone-700 hover:text-crimson hover:bg-red-50 rounded-lg transition-colors border-b border-stone-100"
                 >
                   {label}
                 </Link>

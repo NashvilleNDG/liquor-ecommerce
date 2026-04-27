@@ -1,12 +1,29 @@
 import Link from "next/link";
 import { fetchProducts } from "@/lib/kanji-api";
 import { deduplicateByVariant } from "@/lib/product-variants";
+import { getProductImage } from "@/lib/product-images";
+import { existsSync, readFileSync } from "fs";
+import path from "path";
 import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NewsletterForm from "@/components/NewsletterForm";
 import CountryCarousel from "@/components/CountryCarousel";
+import BrandsCarousel from "@/components/BrandsCarousel";
+import ProductRowCarousel from "@/components/ProductRowCarousel";
 import { ArrowRight, ChevronRight } from "lucide-react";
+
+const HIDDEN_DEPTS = ["DELIVERY FEE", "GROCERY", "Kegs", "KEG", "NOVELTY", "PROMOCODE",
+  "Tobacco", "TOBACCO", "CBD", "THC", "Cigarette", "CIGARETTE",
+  "CIGARS", "Cigars", "CIGAR", "Vape", "VAPE", "E-Cigarette", "E-CIGARETTE"];
+
+function loadImageCache(): Record<string, string | null> {
+  try {
+    const file = path.join(process.cwd(), "data", "product-images-cache.json");
+    if (!existsSync(file)) return {};
+    return JSON.parse(readFileSync(file, "utf-8"));
+  } catch { return {}; }
+}
 
 export const revalidate = 300;
 
@@ -38,7 +55,7 @@ function ProductRow({ products }: { products: ReturnType<typeof deduplicateByVar
 const PAIRINGS = [
   { name: "Cheese",           img: "https://images.unsplash.com/photo-1452195100486-9cc805987862?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=cheese"         },
   { name: "Meat",             img: "https://images.unsplash.com/photo-1558030006-450675393462?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=meat"           },
-  { name: "Poultry",          img: "https://images.unsplash.com/photo-1598103442097-8b74394b95c2?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=poultry"        },
+  { name: "Poultry",          img: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=poultry"        },
   { name: "Fish",             img: "https://images.unsplash.com/photo-1534482421-64566f976cfa?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=fish"           },
   { name: "Fruits & Veggies", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=fruits_veggies" },
   { name: "Dessert",          img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300&h=300&fit=crop&q=80", href: "/shop?pairing=dessert"        },
@@ -51,31 +68,43 @@ const PAIRINGS = [
 ];
 
 const BRANDS = [
-  { name: "Patrón Tequila",  count: 11, emoji: "🥃" },
-  { name: "Espolòn",         count: 7,  emoji: "🥃" },
-  { name: "Cruzan",          count: 20, emoji: "🍹" },
-  { name: "1792",            count: 9,  emoji: "🥃" },
-  { name: "Angel's Envy",    count: 5,  emoji: "🥃" },
-  { name: "Grey Goose",      count: 6,  emoji: "🍸" },
-  { name: "The Macallan",    count: 14, emoji: "🥃" },
-  { name: "Maker's Mark",    count: 8,  emoji: "🥃" },
+  { name: "Patrón Tequila", count: 11, img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=260&fit=crop&q=80" },
+  { name: "Espolòn",        count: 7,  img: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&h=260&fit=crop&q=80" },
+  { name: "Cruzan",         count: 20, img: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=400&h=260&fit=crop&q=80" },
+  { name: "1792",           count: 9,  img: "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=400&h=260&fit=crop&q=80" },
+  { name: "Angel's Envy",   count: 5,  img: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?w=400&h=260&fit=crop&q=80" },
+  { name: "Grey Goose",     count: 6,  img: "https://images.unsplash.com/photo-1545948843-b2fc86e35d2c?w=400&h=260&fit=crop&q=80" },
+  { name: "The Macallan",   count: 14, img: "https://images.unsplash.com/photo-1560512823-829485b8bf24?w=400&h=260&fit=crop&q=80" },
+  { name: "Maker's Mark",   count: 8,  img: "https://images.unsplash.com/photo-1507281549113-040fcbab5dc7?w=400&h=260&fit=crop&q=80" },
 ];
 
 export default async function HomePage() {
   const allProducts = await fetchProducts();
-  const inStock     = allProducts.filter((p) => Number(p.CurrentStock) > 0);
-  const deduped     = deduplicateByVariant(inStock);
+  const imageCache  = loadImageCache();
 
-  const byDept = (dept: string) => deduped.filter((p) => p.Department === dept);
+  const inStock = allProducts
+    .filter((p) => Number(p.CurrentStock) > 0)
+    .filter((p) => !HIDDEN_DEPTS.includes(p.Department));
 
-  const bestSellers   = deduped.slice(0, 12);
-  const newArrivals   = [...deduped].reverse().slice(0, 12);
-  const backInStock   = deduped.filter((p) => Number(p.CurrentStock) <= 5 && Number(p.CurrentStock) > 0).slice(0, 12);
-  const liquor        = byDept("LIQUOR").slice(0, 12);
-  const wines         = byDept("Wines").slice(0, 12);
-  const beer          = byDept("BEER").slice(0, 12);
-  const under20       = deduped.filter((p) => Number(p.Price) < 20).slice(0, 12);
-  const exclusive     = deduped.filter((p) => Number(p.Price) >= 100).slice(0, 12);
+  const deduped = deduplicateByVariant(inStock).map((p) => ({
+    ...p,
+    _imageUrl: getProductImage(p.ItemUPC) ?? imageCache[p.ItemUPC] ?? null,
+  }));
+
+  // Sort: products with real images first, then the rest
+  const withImagesFirst = <T extends { _imageUrl?: string | null }>(arr: T[]) =>
+    [...arr].sort((a, b) => (b._imageUrl ? 1 : 0) - (a._imageUrl ? 1 : 0));
+
+  const byDept = (dept: string) => withImagesFirst(deduped.filter((p) => p.Department === dept));
+
+  const bestSellers   = withImagesFirst(deduped).slice(0, 20);
+  const newArrivals   = withImagesFirst([...deduped].reverse()).slice(0, 20);
+  const backInStock   = withImagesFirst(deduped.filter((p) => Number(p.CurrentStock) <= 5 && Number(p.CurrentStock) > 0)).slice(0, 20);
+  const liquor        = byDept("LIQUOR").slice(0, 20);
+  const wines         = byDept("Wines").slice(0, 20);
+  const beer          = byDept("BEER").slice(0, 20);
+  const under20       = withImagesFirst(deduped.filter((p) => Number(p.Price) < 20)).slice(0, 20);
+  const exclusive     = withImagesFirst(deduped.filter((p) => Number(p.Price) >= 100)).slice(0, 20);
 
   return (
     <>
@@ -123,7 +152,7 @@ export default async function HomePage() {
         {bestSellers.length > 0 && (
           <section>
             <SectionHeading title="Best Sellers" href="/shop?sort=stock_desc" />
-            <ProductRow products={bestSellers} />
+            <ProductRowCarousel products={bestSellers} />
           </section>
         )}
 
@@ -137,7 +166,7 @@ export default async function HomePage() {
         {newArrivals.length > 0 && (
           <section>
             <SectionHeading title="New Arrivals" href="/shop?sort=name" />
-            <ProductRow products={newArrivals} />
+            <ProductRowCarousel products={newArrivals} />
           </section>
         )}
 
@@ -145,7 +174,7 @@ export default async function HomePage() {
         {backInStock.length > 0 && (
           <section>
             <SectionHeading title="Back In Stock" href="/shop?instock=1" />
-            <ProductRow products={backInStock} />
+            <ProductRowCarousel products={backInStock} />
           </section>
         )}
 
@@ -178,7 +207,7 @@ export default async function HomePage() {
         {exclusive.length > 0 && (
           <section>
             <SectionHeading title="Exclusive Vintage" href="/shop?sort=price_desc&min=100" />
-            <ProductRow products={exclusive} />
+            <ProductRowCarousel products={exclusive} />
           </section>
         )}
 
@@ -186,7 +215,7 @@ export default async function HomePage() {
         {liquor.length > 0 && (
           <section>
             <SectionHeading title="Spirits" href="/shop?dept=LIQUOR" />
-            <ProductRow products={liquor} />
+            <ProductRowCarousel products={liquor} />
           </section>
         )}
 
@@ -194,33 +223,21 @@ export default async function HomePage() {
         {under20.length > 0 && (
           <section>
             <SectionHeading title="Under $20" href="/shop?max=20" />
-            <ProductRow products={under20} />
+            <ProductRowCarousel products={under20} />
           </section>
         )}
 
         {/* Brands */}
         <section>
-          <SectionHeading title="Brands" href="/shop" />
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
-            {BRANDS.map(({ name, count, emoji }) => (
-              <Link
-                key={name}
-                href="/shop"
-                className="flex-shrink-0 flex flex-col items-center gap-2 w-28 bg-white border border-stone-200 rounded-xl p-4 hover:border-crimson hover:shadow-md transition-all text-center"
-              >
-                <span className="text-2xl">{emoji}</span>
-                <p className="text-[11px] font-bold text-stone-800 leading-tight">{name}</p>
-                <p className="text-[10px] text-stone-400">{count} Products</p>
-              </Link>
-            ))}
-          </div>
+          <SectionHeading title="Shop by Brand" href="/shop" />
+          <BrandsCarousel brands={BRANDS} />
         </section>
 
         {/* Wines */}
         {wines.length > 0 && (
           <section>
             <SectionHeading title="Wine" href="/shop?dept=Wines" />
-            <ProductRow products={wines} />
+            <ProductRowCarousel products={wines} />
           </section>
         )}
 
@@ -228,7 +245,7 @@ export default async function HomePage() {
         {beer.length > 0 && (
           <section>
             <SectionHeading title="Beer" href="/shop?dept=BEER" />
-            <ProductRow products={beer} />
+            <ProductRowCarousel products={beer} />
           </section>
         )}
 

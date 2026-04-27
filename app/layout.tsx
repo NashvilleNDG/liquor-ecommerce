@@ -6,7 +6,6 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { RecentlyViewedProvider } from "@/context/RecentlyViewedContext";
 import { OrderHistoryProvider } from "@/context/OrderHistoryContext";
 import { LoyaltyProvider } from "@/context/LoyaltyContext";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import CartDrawer from "@/components/CartDrawer";
 import AgeVerification from "@/components/AgeVerification";
 import AuthProvider from "@/components/AuthProvider";
@@ -33,21 +32,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${rubik.variable} ${nunitoSans.variable} font-sans bg-white text-stone-900 min-h-screen antialiased`}>
         <AuthProvider>
-          <ThemeProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <RecentlyViewedProvider>
-                  <OrderHistoryProvider>
-                    <LoyaltyProvider>
-                      <AgeVerification />
-                      <CartDrawer />
-                      {children}
-                    </LoyaltyProvider>
-                  </OrderHistoryProvider>
-                </RecentlyViewedProvider>
-              </WishlistProvider>
-            </CartProvider>
-          </ThemeProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <RecentlyViewedProvider>
+                <OrderHistoryProvider>
+                  <LoyaltyProvider>
+                    <AgeVerification />
+                    <CartDrawer />
+                    {children}
+                  </LoyaltyProvider>
+                </OrderHistoryProvider>
+              </RecentlyViewedProvider>
+            </WishlistProvider>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

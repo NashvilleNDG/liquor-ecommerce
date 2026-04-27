@@ -35,6 +35,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.walmartimages.com",
       },
+      {
+        protocol: "https",
+        hostname: "go-upc.s3.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.amazonaws.com",
+      },
     ],
   },
 };
