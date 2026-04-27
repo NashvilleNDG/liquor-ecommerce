@@ -9,6 +9,7 @@ import {
 import type { Product } from "@/lib/kanji-api";
 import { inferOrigin, COUNTRY_CODE_TO_NAME, COUNTRY_FLAG } from "@/lib/product-origin";
 import { PAIRING_CATEGORIES, type PairingTagsMap } from "@/lib/pairing-categories";
+import { extractBrand, normalizeBrand } from "@/lib/brands";
 import ProductCard from "@/components/ProductCard";
 import ProductRow from "@/components/ProductRow";
 
@@ -19,18 +20,18 @@ interface Props {
 }
 
 const DEPT_META: Record<string, { label: string; icon: string }> = {
-  BEER:             { label: "Beer",           icon: "🍺" },
-  Wines:            { label: "Wine",           icon: "🍷" },
-  WINE:             { label: "Wine",           icon: "🍷" },
-  LIQUOR:           { label: "Spirits",        icon: "🥃" },
-  CBD:              { label: "CBD",            icon: "🌿" },
-  CIGARS:           { label: "Cigars",         icon: "💨" },
-  Cigarette:        { label: "Cigarettes",     icon: "🚬" },
-  Soda:             { label: "Soda",           icon: "🥤" },
-  MIXERS:           { label: "Mixers",         icon: "🍹" },
-  TOBACCO:          { label: "Tobacco",        icon: "🌱" },
-  KEG:              { label: "Kegs",           icon: "🛢️" },
-  "Cigar Accessory":{ label: "Accessories",   icon: "🗜️" },
+  BEER:              { label: "Beer",        icon: "🍺" },
+  Wines:             { label: "Wine",        icon: "🍷" },
+  WINE:              { label: "Wine",        icon: "🍷" },
+  LIQUOR:            { label: "Spirits",     icon: "🥃" },
+  CBD:               { label: "CBD",         icon: "🌿" },
+  CIGARS:            { label: "Cigars",      icon: "💨" },
+  Cigarette:         { label: "Cigarettes",  icon: "🚬" },
+  Soda:              { label: "Soda",        icon: "🥤" },
+  MIXERS:            { label: "Mixers",      icon: "🍹" },
+  TOBACCO:           { label: "Tobacco",     icon: "🌱" },
+  KEG:               { label: "Kegs",        icon: "🛢️" },
+  "Cigar Accessory": { label: "Accessories", icon: "🗜️" },
 };
 
 const SORT_OPTIONS = [
@@ -42,6 +43,91 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZE = 48;
 
+// ── Subtype detection ─────────────────────────────────────────────────────────
+function getSubtype(itemName: string, dept: string): string | null {
+  const n = itemName.toUpperCase();
+
+  if (dept === "LIQUOR") {
+    if (/BOURBON/.test(n))                                          return "Bourbon";
+    if (/SCOTCH/.test(n))                                           return "Scotch";
+    if (/WHISKEY|WHISKY/.test(n))                                   return "Whiskey";
+    if (/VODKA/.test(n))                                            return "Vodka";
+    if (/MEZCAL/.test(n))                                           return "Mezcal";
+    if (/TEQUILA/.test(n))                                          return "Tequila";
+    if (/\bRUM\b/.test(n))                                          return "Rum";
+    if (/\bGIN\b/.test(n))                                          return "Gin";
+    if (/COGNAC/.test(n))                                           return "Cognac";
+    if (/BRANDY|ARMAGNAC/.test(n))                                  return "Brandy";
+    if (/LIQUEUR|CORDIAL|TRIPLE SEC|SCHNAPPS|AMARETTO|BAILEY|KAHLUA|FRANGELICO/.test(n))
+                                                                     return "Liqueur";
+    if (/VERMOUTH/.test(n))                                         return "Vermouth";
+    if (/ABSINTHE/.test(n))                                         return "Absinthe";
+    if (/SAKE/.test(n))                                             return "Sake";
+    if (/MOONSHINE/.test(n))                                        return "Moonshine";
+    if (/RYE\b/.test(n))                                            return "Rye";
+    return null;
+  }
+
+  if (dept === "BEER") {
+    if (/HARD SELTZER|WHITE CLAW|TRULY|VIZZY|NUTRL/.test(n))       return "Hard Seltzer";
+    if (/HARD (CIDER|APPLE)|ANGRY ORCHARD|STRONGBOW/.test(n))      return "Hard Cider";
+    if (/IPA|INDIA PALE/.test(n))                                   return "IPA";
+    if (/STOUT|PORTER/.test(n))                                     return "Stout & Porter";
+    if (/LAGER|PILSNER|PILSEN|PILS\b/.test(n))                     return "Lager & Pilsner";
+    if (/WHEAT|HEFEWEIZEN|WIT\b/.test(n))                          return "Wheat Beer";
+    if (/SOUR|GOSE|BERLINER/.test(n))                               return "Sour";
+    if (/ALE|PALE ALE/.test(n))                                     return "Ale";
+    return null;
+  }
+
+  if (dept === "Wines" || dept === "WINE") {
+    if (/SPARKLING|CHAMPAGNE|PROSECCO|CAVA|CREMANT|PÉTILLANT|PETILLANT/.test(n)) return "Sparkling";
+    if (/ROS[EÉ]|ROSATO/.test(n))                                  return "Rosé";
+    if (/PORT|SHERRY|MADEIRA|DESSERT|SAUTERNES|ICE WINE|ICEWINE/.test(n))        return "Dessert & Port";
+    if (/CABERNET|MERLOT|PINOT NOIR|ZINFANDEL|MALBEC|SHIRAZ|SYRAH|CHIANTI|BORDEAUX|RIOJA|BAROLO|RED BLEND|TEMPRANILLO|SANGIOVESE|NEBBIOLO|GRENACHE/.test(n))
+                                                                     return "Red Wine";
+    if (/CHARDONNAY|SAUVIGNON|PINOT GRIGIO|PINOT GRIS|RIESLING|MOSCATO|GEWURZ|VIOGNIER|ALBARINO|ALBER|WHITE BLEND|VERMENTINO|GRUNER/.test(n))
+                                                                     return "White Wine";
+    return null;
+  }
+
+  return null;
+}
+
+// ── Size normalization ────────────────────────────────────────────────────────
+const SIZE_ORDER = [
+  "50mL","100mL","200mL","375mL","500mL","750mL","1L","1.75L","3L","4L",
+  "12oz","16oz","19.2oz","22oz","32oz","40oz",
+  "6-Pack","12-Pack","24-Pack","Case",
+];
+
+function normalizeSize(size: string): string | null {
+  if (!size) return null;
+  const s = size.trim().toUpperCase().replace(/\s+/g, "");
+  if (/^50ML/.test(s))                    return "50mL";
+  if (/^100ML/.test(s))                   return "100mL";
+  if (/^200ML/.test(s))                   return "200mL";
+  if (/^375ML/.test(s))                   return "375mL";
+  if (/^500ML/.test(s))                   return "500mL";
+  if (/^750ML/.test(s))                   return "750mL";
+  if (/^(1000ML|1\.0L|1LTR|1L$)/.test(s)) return "1L";
+  if (/^(1\.75L|1750ML|175CL)/.test(s))  return "1.75L";
+  if (/^(3L|3000ML)/.test(s))            return "3L";
+  if (/^(4L|4000ML)/.test(s))            return "4L";
+  if (/^12OZ/.test(s))                   return "12oz";
+  if (/^16OZ/.test(s))                   return "16oz";
+  if (/^19\.?2OZ/.test(s))              return "19.2oz";
+  if (/^22OZ/.test(s))                   return "22oz";
+  if (/^32OZ/.test(s))                   return "32oz";
+  if (/^40OZ/.test(s))                   return "40oz";
+  if (/^(6PK|6-PK|6PACK|6\/12)/.test(s)) return "6-Pack";
+  if (/^(12PK|12-PK|12PACK)/.test(s))   return "12-Pack";
+  if (/^(24PK|24-PK|24PACK)/.test(s))   return "24-Pack";
+  if (/^(CASE|30PK|30-PK)/.test(s))     return "Case";
+  return null;
+}
+
+// ── Shared sub-components ──────────────────────────────────────────────────────
 function FilterSection({
   title, children, defaultOpen = true,
 }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
@@ -50,32 +136,126 @@ function FilterSection({
     <div className="border-b border-stone-200 dark:border-stone-800 py-4">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center justify-between w-full text-sm font-semibold text-stone-700 dark:text-stone-200 hover:text-stone-900 dark:hover:text-white transition-colors mb-0"
+        className="flex items-center justify-between w-full text-sm font-semibold text-stone-700 dark:text-stone-200 hover:text-stone-900 dark:hover:text-white transition-colors"
       >
         {title}
-        {open ? <ChevronUp size={14} className="text-stone-400 dark:text-stone-500" /> : <ChevronDown size={14} className="text-stone-400 dark:text-stone-500" />}
+        {open
+          ? <ChevronUp size={14} className="text-stone-400 dark:text-stone-500" />
+          : <ChevronDown size={14} className="text-stone-400 dark:text-stone-500" />}
       </button>
       {open && <div className="mt-3">{children}</div>}
     </div>
   );
 }
 
+function CheckboxList({
+  items,
+  selected,
+  onToggle,
+  maxVisible = 8,
+  searchable = false,
+}: {
+  items: { value: string; label: string; count: number }[];
+  selected: string[];
+  onToggle: (value: string) => void;
+  maxVisible?: number;
+  searchable?: boolean;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [q, setQ] = useState("");
+
+  const filtered = q ? items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase())) : items;
+  const visible = expanded || q ? filtered : filtered.slice(0, maxVisible);
+  const hasMore = !q && filtered.length > maxVisible;
+
+  return (
+    <div className="space-y-1">
+      {searchable && items.length > maxVisible && (
+        <div className="relative mb-2">
+          <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search…"
+            className="w-full pl-7 pr-2 py-1.5 text-xs bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg outline-none focus:border-amber-400 dark:focus:border-yellow-500 text-stone-700 dark:text-stone-300 placeholder-stone-400"
+          />
+        </div>
+      )}
+      {visible.map(({ value, label, count }) => {
+        const checked = selected.includes(value);
+        return (
+          <label
+            key={value}
+            className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/60 group"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <span className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
+                checked
+                  ? "bg-amber-500 border-amber-500"
+                  : "border-stone-300 dark:border-stone-600 group-hover:border-amber-400"
+              }`}>
+                {checked && (
+                  <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                    <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </span>
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={checked}
+                onChange={() => onToggle(value)}
+              />
+              <span className={`text-xs truncate transition-colors ${checked ? "text-stone-900 dark:text-white font-medium" : "text-stone-600 dark:text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-200"}`}>
+                {label}
+              </span>
+            </span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+              checked
+                ? "bg-amber-100 dark:bg-yellow-400/20 text-amber-700 dark:text-yellow-400"
+                : "bg-stone-100 dark:bg-stone-800 text-stone-500"
+            }`}>
+              {count}
+            </span>
+          </label>
+        );
+      })}
+      {hasMore && (
+        <button
+          onClick={() => setExpanded((e) => !e)}
+          className="mt-1 ml-2 text-[11px] text-amber-600 dark:text-yellow-500 hover:text-amber-500 dark:hover:text-yellow-400 flex items-center gap-1 transition-colors cursor-pointer"
+        >
+          {expanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+          {expanded ? "Show less" : `Show ${filtered.length - maxVisible} more`}
+        </button>
+      )}
+      {filtered.length === 0 && (
+        <p className="text-xs text-stone-400 px-2">No matches</p>
+      )}
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function ShopClient({ products, departments, pairingTagsMap }: Props) {
   const searchParams = useSearchParams();
 
-  const [search, setSearch]           = useState(searchParams.get("q") ?? "");
-  const [dept, setDept]               = useState(searchParams.get("dept") ?? "ALL");
-  const [country, setCountry]         = useState(searchParams.get("country") ?? "");
-  const [inStockOnly, setInStockOnly] = useState(searchParams.get("instock") === "1");
-  const [sort, setSort]               = useState(searchParams.get("sort") ?? "name");
-  const [minPrice, setMinPrice]       = useState(searchParams.get("min") ?? "");
-  const [maxPrice, setMaxPrice]       = useState(searchParams.get("max") ?? "");
-  const [pairing, setPairing]         = useState(searchParams.get("pairing") ?? "");
-  const [page, setPage]               = useState(1);
-  const [view, setView]               = useState<"grid" | "list">("grid");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [search, setSearch]                 = useState(searchParams.get("q") ?? "");
+  const [dept, setDept]                     = useState(searchParams.get("dept") ?? "ALL");
+  const [country, setCountry]               = useState(searchParams.get("country") ?? "");
+  const [inStockOnly, setInStockOnly]       = useState(searchParams.get("instock") === "1");
+  const [sort, setSort]                     = useState(searchParams.get("sort") ?? "name");
+  const [minPrice, setMinPrice]             = useState(searchParams.get("min") ?? "");
+  const [maxPrice, setMaxPrice]             = useState(searchParams.get("max") ?? "");
+  const [pairing, setPairing]               = useState(searchParams.get("pairing") ?? "");
+  const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands]     = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes]       = useState<string[]>([]);
+  const [page, setPage]                     = useState(1);
+  const [view, setView]                     = useState<"grid" | "list">("grid");
+  const [sidebarOpen, setSidebarOpen]       = useState(false);
 
-  // Sync state whenever URL params change (e.g. clicking a nav link)
+  // Sync URL params
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "");
     setDept(searchParams.get("dept") ?? "ALL");
@@ -88,20 +268,22 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
     setPage(1);
   }, [searchParams]);
 
-  // Reset page on manual filter change
-  useEffect(() => { setPage(1); }, [search, dept, country, inStockOnly, sort, minPrice, maxPrice, pairing]);
+  // Reset page on any filter change
+  useEffect(() => {
+    setPage(1);
+  }, [search, dept, country, inStockOnly, sort, minPrice, maxPrice, pairing, selectedSubtypes, selectedBrands, selectedSizes]);
 
-  // Resolve country code → full name for filtering (e.g. "US" → "United States")
   const countryFullName = country && country !== "ALL"
     ? (COUNTRY_CODE_TO_NAME[country] ?? country)
     : "";
 
   const activePairing = pairing ? PAIRING_CATEGORIES.find((c) => c.id === pairing) : null;
 
-  const filtered = useMemo(() => {
+  // ── Products after dept/country/stock/search/price/pairing (pre-subtype/brand/size) ──
+  const preFiltered = useMemo(() => {
     let r = products;
-    if (dept !== "ALL")  r = r.filter((p) => p.Department === dept);
-    if (inStockOnly)     r = r.filter((p) => Number(p.CurrentStock) > 0);
+    if (dept !== "ALL")    r = r.filter((p) => p.Department === dept);
+    if (inStockOnly)       r = r.filter((p) => Number(p.CurrentStock) > 0);
     if (search.trim()) {
       const q = search.toLowerCase();
       r = r.filter((p) =>
@@ -121,6 +303,71 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
     const lo = parseFloat(minPrice), hi = parseFloat(maxPrice);
     if (!isNaN(lo)) r = r.filter((p) => Number(p.Price) >= lo);
     if (!isNaN(hi)) r = r.filter((p) => Number(p.Price) <= hi);
+    return r;
+  }, [products, dept, country, countryFullName, inStockOnly, search, minPrice, maxPrice, pairing, pairingTagsMap]);
+
+  // ── Sidebar option lists (counts from preFiltered) ────────────────────────
+  const subtypeOptions = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of preFiltered) {
+      const sub = getSubtype(p.ItemName?.toString() ?? "", p.Department ?? "");
+      if (sub) map.set(sub, (map.get(sub) ?? 0) + 1);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([value, count]) => ({ value, label: value, count }));
+  }, [preFiltered]);
+
+  const brandOptions = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of preFiltered) {
+      const brand = normalizeBrand(extractBrand(p.ItemName?.toString() ?? ""));
+      if (brand) map.set(brand, (map.get(brand) ?? 0) + 1);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({ value, label: value, count }));
+  }, [preFiltered]);
+
+  const sizeOptions = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of preFiltered) {
+      const sz = normalizeSize(p.Size?.toString() ?? "");
+      if (sz) map.set(sz, (map.get(sz) ?? 0) + 1);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => {
+        const ia = SIZE_ORDER.indexOf(a[0]), ib = SIZE_ORDER.indexOf(b[0]);
+        if (ia !== -1 && ib !== -1) return ia - ib;
+        if (ia !== -1) return -1;
+        if (ib !== -1) return 1;
+        return b[1] - a[1];
+      })
+      .map(([value, count]) => ({ value, label: value, count }));
+  }, [preFiltered]);
+
+  // ── Final filtered + sorted results ──────────────────────────────────────
+  const filtered = useMemo(() => {
+    let r = preFiltered;
+
+    if (selectedSubtypes.length > 0) {
+      r = r.filter((p) => {
+        const sub = getSubtype(p.ItemName?.toString() ?? "", p.Department ?? "");
+        return sub !== null && selectedSubtypes.includes(sub);
+      });
+    }
+    if (selectedBrands.length > 0) {
+      r = r.filter((p) => {
+        const brand = normalizeBrand(extractBrand(p.ItemName?.toString() ?? ""));
+        return selectedBrands.includes(brand);
+      });
+    }
+    if (selectedSizes.length > 0) {
+      r = r.filter((p) => {
+        const sz = normalizeSize(p.Size?.toString() ?? "");
+        return sz !== null && selectedSizes.includes(sz);
+      });
+    }
 
     return [...r].sort((a, b) => {
       if (sort === "price_asc")  return Number(a.Price) - Number(b.Price);
@@ -128,20 +375,37 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
       if (sort === "stock_desc") return Number(b.CurrentStock) - Number(a.CurrentStock);
       return (a.ItemName?.toString() ?? "").localeCompare(b.ItemName?.toString() ?? "");
     });
-  }, [products, dept, country, countryFullName, inStockOnly, search, sort, minPrice, maxPrice, pairing, pairingTagsMap]);
+  }, [preFiltered, selectedSubtypes, selectedBrands, selectedSizes, sort]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const hasFilters = search || dept !== "ALL" || (country && country !== "ALL") || inStockOnly || sort !== "name" || minPrice || maxPrice || pairing;
+
+  const hasFilters = !!(
+    search || dept !== "ALL" || (country && country !== "ALL") ||
+    inStockOnly || sort !== "name" || minPrice || maxPrice || pairing ||
+    selectedSubtypes.length || selectedBrands.length || selectedSizes.length
+  );
 
   function resetAll() {
     setSearch(""); setDept("ALL"); setCountry(""); setInStockOnly(false);
-    setSort("name"); setMinPrice(""); setMaxPrice(""); setPairing(""); setPage(1);
+    setSort("name"); setMinPrice(""); setMaxPrice(""); setPairing("");
+    setSelectedSubtypes([]); setSelectedBrands([]); setSelectedSizes([]);
+    setPage(1);
   }
 
   function scrollTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
 
-  // Department counts for sidebar
+  function toggleSubtype(v: string) {
+    setSelectedSubtypes((s) => s.includes(v) ? s.filter((x) => x !== v) : [...s, v]);
+  }
+  function toggleBrand(v: string) {
+    setSelectedBrands((s) => s.includes(v) ? s.filter((x) => x !== v) : [...s, v]);
+  }
+  function toggleSize(v: string) {
+    setSelectedSizes((s) => s.includes(v) ? s.filter((x) => x !== v) : [...s, v]);
+  }
+
+  // Department counts
   const deptCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const p of products) map.set(p.Department, (map.get(p.Department) ?? 0) + 1);
@@ -150,7 +414,8 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
 
   const SidebarFilters = () => (
     <aside className="w-full space-y-0">
-      {/* Department */}
+
+      {/* ── Category ── */}
       <FilterSection title="Category">
         <ul className="space-y-0.5">
           {[{ key: "ALL", label: "All Categories", count: products.length }, ...departments.map((d) => ({
@@ -160,7 +425,11 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
           }))].map(({ key, label, count }) => (
             <li key={key}>
               <button
-                onClick={() => { setDept(key); scrollTop(); }}
+                onClick={() => {
+                  setDept(key);
+                  setSelectedSubtypes([]);
+                  scrollTop();
+                }}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-150 cursor-pointer ${
                   dept === key
                     ? "bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-yellow-400 font-semibold border border-amber-200 dark:border-gold/20"
@@ -180,7 +449,44 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
         </ul>
       </FilterSection>
 
-      {/* Price range */}
+      {/* ── Subtype ── */}
+      {subtypeOptions.length > 0 && (
+        <FilterSection title="Type">
+          <CheckboxList
+            items={subtypeOptions}
+            selected={selectedSubtypes}
+            onToggle={toggleSubtype}
+            maxVisible={10}
+          />
+        </FilterSection>
+      )}
+
+      {/* ── Brand ── */}
+      {brandOptions.length > 0 && (
+        <FilterSection title="Brand" defaultOpen={false}>
+          <CheckboxList
+            items={brandOptions}
+            selected={selectedBrands}
+            onToggle={toggleBrand}
+            maxVisible={8}
+            searchable
+          />
+        </FilterSection>
+      )}
+
+      {/* ── Size ── */}
+      {sizeOptions.length > 0 && (
+        <FilterSection title="Size" defaultOpen={false}>
+          <CheckboxList
+            items={sizeOptions}
+            selected={selectedSizes}
+            onToggle={toggleSize}
+            maxVisible={8}
+          />
+        </FilterSection>
+      )}
+
+      {/* ── Price Range ── */}
       <FilterSection title="Price Range">
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
@@ -203,9 +509,8 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
               />
             </div>
           </div>
-          {/* Quick price presets */}
           <div className="flex flex-wrap gap-1.5">
-            {[["Under $15","","15"], ["$15–$30","15","30"], ["$30–$60","30","60"], ["$60+","60",""]].map(([lbl, mn, mx]) => (
+            {[["Under $15","","15"],["$15–$30","15","30"],["$30–$60","30","60"],["$60+","60",""]].map(([lbl, mn, mx]) => (
               <button
                 key={lbl}
                 onClick={() => { setMinPrice(mn); setMaxPrice(mx); }}
@@ -222,7 +527,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
         </div>
       </FilterSection>
 
-      {/* Availability */}
+      {/* ── Availability ── */}
       <FilterSection title="Availability">
         <label className="flex items-center gap-3 cursor-pointer group">
           <div
@@ -290,7 +595,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
 
           {/* ── Left sidebar (desktop) ── */}
           <div className="hidden lg:block w-56 xl:w-64 flex-shrink-0">
-            <div className="sticky top-20 space-y-1">
+            <div className="sticky top-20 space-y-1 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
               <p className="text-[10px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest px-1 mb-3">
                 Filters
               </p>
@@ -362,7 +667,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
 
             {/* Mobile filter drawer */}
             {sidebarOpen && (
-              <div className="lg:hidden bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-lg">
+              <div className="lg:hidden bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 shadow-lg max-h-[70vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm font-semibold text-stone-900 dark:text-white">Filters</p>
                   <button onClick={() => setSidebarOpen(false)} className="text-stone-400 hover:text-stone-700 dark:hover:text-white cursor-pointer">
@@ -385,9 +690,27 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
                 {dept !== "ALL" && (
                   <span className="flex items-center gap-1.5 text-xs bg-red-50 border border-red-200 text-crimson px-3 py-1 rounded-full">
                     {DEPT_META[dept]?.icon} {DEPT_META[dept]?.label ?? dept}
-                    <button onClick={() => setDept("ALL")} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
+                    <button onClick={() => { setDept("ALL"); setSelectedSubtypes([]); }} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
                   </span>
                 )}
+                {selectedSubtypes.map((s) => (
+                  <span key={s} className="flex items-center gap-1.5 text-xs bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full">
+                    {s}
+                    <button onClick={() => toggleSubtype(s)} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
+                  </span>
+                ))}
+                {selectedBrands.map((b) => (
+                  <span key={b} className="flex items-center gap-1.5 text-xs bg-purple-50 border border-purple-200 text-purple-700 px-3 py-1 rounded-full">
+                    {b}
+                    <button onClick={() => toggleBrand(b)} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
+                  </span>
+                ))}
+                {selectedSizes.map((sz) => (
+                  <span key={sz} className="flex items-center gap-1.5 text-xs bg-sky-50 border border-sky-200 text-sky-700 px-3 py-1 rounded-full">
+                    {sz}
+                    <button onClick={() => toggleSize(sz)} className="hover:opacity-70 cursor-pointer"><X size={10} /></button>
+                  </span>
+                ))}
                 {countryFullName && (
                   <span className="flex items-center gap-1.5 text-xs bg-red-50 border border-red-200 text-crimson px-3 py-1 rounded-full">
                     {COUNTRY_FLAG[countryFullName] || "🌍"} {countryFullName}
