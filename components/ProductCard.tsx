@@ -59,7 +59,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
             className="object-contain p-5 group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-stone-50">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white">
             <span className="text-6xl group-hover:scale-110 transition-transform duration-300 select-none">{deptIcon}</span>
           </div>
         )}

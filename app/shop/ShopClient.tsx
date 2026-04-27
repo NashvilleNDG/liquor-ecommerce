@@ -136,7 +136,7 @@ function FilterSection({
     <div className="border-b border-stone-200 dark:border-stone-800 py-4">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center justify-between w-full text-sm font-semibold text-stone-700 dark:text-stone-200 hover:text-stone-900 dark:hover:text-white transition-colors"
+        className="flex items-center justify-between w-full text-sm font-semibold text-stone-900 dark:text-stone-200 hover:text-stone-900 dark:hover:text-white transition-colors"
       >
         {title}
         {open
@@ -177,7 +177,7 @@ function CheckboxList({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search…"
-            className="w-full pl-7 pr-2 py-1.5 text-xs bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg outline-none focus:border-amber-400 dark:focus:border-yellow-500 text-stone-700 dark:text-stone-300 placeholder-stone-400"
+            className="w-full pl-7 pr-2 py-1.5 text-xs bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg outline-none focus:border-amber-400 dark:focus:border-yellow-500 text-stone-900 dark:text-stone-300 placeholder-stone-400"
           />
         </div>
       )}
@@ -186,7 +186,7 @@ function CheckboxList({
         return (
           <label
             key={value}
-            className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/60 group"
+            className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/60 group select-none"
           >
             <span className="flex items-center gap-2 min-w-0">
               <span className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
@@ -206,14 +206,14 @@ function CheckboxList({
                 checked={checked}
                 onChange={() => onToggle(value)}
               />
-              <span className={`text-xs truncate transition-colors ${checked ? "text-stone-900 dark:text-white font-medium" : "text-stone-600 dark:text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-200"}`}>
+              <span className={`text-xs truncate transition-colors ${checked ? "text-stone-900 dark:text-white font-medium" : "text-stone-800 dark:text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-200"}`}>
                 {label}
               </span>
             </span>
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${
               checked
                 ? "bg-amber-100 dark:bg-yellow-400/20 text-amber-700 dark:text-yellow-400"
-                : "bg-stone-100 dark:bg-stone-800 text-stone-500"
+                : "bg-stone-100 dark:bg-stone-800 text-stone-700"
             }`}>
               {count}
             </span>
@@ -433,14 +433,14 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-150 cursor-pointer ${
                   dept === key
                     ? "bg-amber-50 dark:bg-gold/10 text-amber-700 dark:text-yellow-400 font-semibold border border-amber-200 dark:border-gold/20"
-                    : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800/60"
+                    : "text-stone-800 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800/60"
                 }`}
               >
                 <span className="flex items-center gap-2">
                   {key !== "ALL" && <span className="text-xs">{DEPT_META[key]?.icon}</span>}
                   {label}
                 </span>
-                <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${dept === key ? "bg-amber-100 dark:bg-yellow-400/20 text-amber-700 dark:text-yellow-400" : "bg-stone-100 dark:bg-stone-800 text-stone-500"}`}>
+                <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${dept === key ? "bg-amber-100 dark:bg-yellow-400/20 text-amber-700 dark:text-yellow-400" : "bg-stone-100 dark:bg-stone-800 text-stone-700"}`}>
                   {count}
                 </span>
               </button>
@@ -496,7 +496,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
                 type="number" min="0" placeholder="0"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                className="w-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 focus:border-amber-500 dark:focus:border-yellow-500 rounded-lg px-3 py-2 text-sm text-stone-900 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-600 outline-none transition-colors"
+                className="w-full bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 focus:border-amber-500 dark:focus:border-yellow-500 rounded-lg px-3 py-2 text-sm text-stone-900 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-600 outline-none transition-colors"
               />
             </div>
             <div>
@@ -505,7 +505,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
                 type="number" min="0" placeholder="∞"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 focus:border-amber-500 dark:focus:border-yellow-500 rounded-lg px-3 py-2 text-sm text-stone-900 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-600 outline-none transition-colors"
+                className="w-full bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 focus:border-amber-500 dark:focus:border-yellow-500 rounded-lg px-3 py-2 text-sm text-stone-900 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-600 outline-none transition-colors"
               />
             </div>
           </div>
@@ -517,7 +517,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
                 className={`text-[11px] px-2 py-1 rounded-full border transition-all cursor-pointer ${
                   minPrice === mn && maxPrice === mx
                     ? "bg-amber-50 dark:bg-yellow-500/10 border-amber-300 dark:border-yellow-500/40 text-amber-700 dark:text-yellow-400"
-                    : "border-stone-200 dark:border-stone-700 text-stone-500 hover:border-stone-400 dark:hover:border-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
+                    : "border-stone-300 dark:border-stone-700 text-stone-700 hover:border-stone-500 dark:hover:border-stone-500 hover:text-stone-900 dark:hover:text-stone-300"
                 }`}
               >
                 {lbl}
@@ -536,7 +536,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
           >
             <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${inStockOnly ? "translate-x-5" : "translate-x-0"}`} />
           </div>
-          <span className="text-sm text-stone-600 dark:text-stone-300 group-hover:text-stone-900 dark:group-hover:text-white transition-colors">In stock only</span>
+          <span className="text-sm text-stone-800 dark:text-stone-300 group-hover:text-stone-900 dark:group-hover:text-white transition-colors">In stock only</span>
         </label>
       </FilterSection>
 
@@ -557,7 +557,7 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
     <div className="min-h-screen bg-white dark:bg-[#0C0A09]">
 
       {/* ── Page header ── */}
-      <div className="border-b border-stone-200 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/40 backdrop-blur-sm">
+      <div className="border-b border-stone-200 dark:border-stone-800/60 bg-white dark:bg-stone-900/40">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6">
           <h1 className="font-heading text-2xl font-bold text-stone-900 dark:text-white">
             {activePairing ? `${activePairing.emoji} Pairs with ${activePairing.label}` : "Browse Products"}
