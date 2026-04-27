@@ -19,7 +19,7 @@ function SuccessContent() {
   const orderNum = params.get("order") ?? Math.random().toString(16).slice(2, 10).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16">
       <div className="max-w-lg w-full space-y-8 text-center">
 
         {/* Success icon */}
@@ -103,7 +103,7 @@ export default function SuccessPage() {
     <>
       <Navbar />
       <Suspense fallback={
-        <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-crimson border-t-transparent rounded-full animate-spin" />
         </div>
       }>

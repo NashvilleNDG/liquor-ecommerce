@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Wine, ShieldCheck } from "lucide-react";
 
 const STORAGE_KEY   = "srtb_age_verified";
@@ -19,14 +20,17 @@ function isVerified(): boolean {
 }
 
 export default function AgeVerification() {
+  const pathname            = usePathname();
   const [show, setShow]     = useState(false);
   const [dob, setDob]       = useState("");
   const [error, setError]   = useState("");
   const [method, setMethod] = useState<"dob" | "confirm">("confirm");
 
   useEffect(() => {
+    // Never show on admin/dashboard routes
+    if (pathname?.startsWith("/dashboard")) return;
     if (!isVerified()) setShow(true);
-  }, []);
+  }, [pathname]);
 
   function confirm() {
     localStorage.setItem(STORAGE_KEY, String(Date.now()));

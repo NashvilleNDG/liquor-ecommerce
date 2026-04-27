@@ -88,10 +88,10 @@ export default function ProductTable({ products }: { products: Product[] }) {
   }
 
   function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <ArrowUpDown size={12} className="inline ml-1 opacity-30" />;
+    if (sortKey !== col) return <ArrowUpDown size={12} className="inline ml-1 text-stone-300" />;
     return sortDir === "asc"
-      ? <ArrowUp size={12} className="inline ml-1 text-amber-400" />
-      : <ArrowDown size={12} className="inline ml-1 text-amber-400" />;
+      ? <ArrowUp size={12} className="inline ml-1 text-amber-500" />
+      : <ArrowDown size={12} className="inline ml-1 text-amber-500" />;
   }
 
   return (
@@ -105,13 +105,13 @@ export default function ProductTable({ products }: { products: Product[] }) {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search by name or UPC…"
-              className="w-full bg-stone-800 border border-stone-700 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-100 placeholder-stone-500 focus:outline-none focus:border-amber-500"
+              className="w-full bg-white border border-stone-200 rounded-lg pl-9 pr-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-400"
             />
           </div>
 
           <button
             onClick={() => exportCSV(filtered)}
-            className="flex items-center gap-2 px-4 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 hover:border-amber-500/50 rounded-lg text-xs font-medium text-gray-300 hover:text-amber-400 transition-all whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-700 rounded-lg text-xs font-semibold text-white transition-all whitespace-nowrap"
           >
             <Download size={14} />
             Export CSV ({filtered.length})
@@ -129,8 +129,8 @@ export default function ProductTable({ products }: { products: Product[] }) {
             <button
               key={id}
               onClick={() => { setStockFilter(id); setPage(1); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                stockFilter === id ? "bg-yellow-500 text-stone-900" : "bg-stone-800 text-stone-400 hover:bg-stone-700"
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                stockFilter === id ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
               }`}
             >
               {label}
@@ -144,10 +144,10 @@ export default function ProductTable({ products }: { products: Product[] }) {
             <button
               key={d}
               onClick={() => { setDept(d); setPage(1); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                 dept === d
-                  ? "bg-blue-600 text-white"
-                  : "bg-stone-800 text-stone-400 hover:bg-stone-700"
+                  ? "bg-stone-900 text-white border-stone-900"
+                  : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
               }`}
             >
               {d}
@@ -159,9 +159,9 @@ export default function ProductTable({ products }: { products: Product[] }) {
       <p className="text-xs text-stone-500">{filtered.length} products found</p>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-stone-800">
+      <div className="overflow-x-auto rounded-xl border border-stone-200">
         <table className="w-full text-sm">
-          <thead className="bg-stone-900 text-stone-400 uppercase text-xs tracking-wider">
+          <thead className="bg-stone-50 border-b border-stone-200">
             <tr>
               {(
                 [
@@ -178,7 +178,7 @@ export default function ProductTable({ products }: { products: Product[] }) {
                 <th
                   key={key}
                   onClick={() => handleSort(key)}
-                  className="px-4 py-3 text-left cursor-pointer hover:text-amber-400 select-none whitespace-nowrap"
+                  className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider cursor-pointer hover:text-stone-900 select-none whitespace-nowrap"
                 >
                   {label}
                   <SortIcon col={key} />
@@ -186,32 +186,26 @@ export default function ProductTable({ products }: { products: Product[] }) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-800">
+          <tbody className="divide-y divide-stone-100">
             {paginated.map((p, i) => {
               const inStock = Number(p.CurrentStock) > 0;
               return (
-                <tr key={`${p.ItemUPC}-${i}`} className="hover:bg-stone-800/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-100 max-w-xs truncate">
+                <tr key={`${p.ItemUPC}-${i}`} className="hover:bg-stone-50 transition-colors">
+                  <td className="px-4 py-3 font-semibold text-stone-900 max-w-xs truncate">
                     {p.ItemName}
                   </td>
                   <td className="px-4 py-3">
                     <DepartmentBadge dept={p.Department} />
                   </td>
-                  <td className="px-4 py-3 text-stone-400">{p.Size}</td>
-                  <td className="px-4 py-3 text-stone-400">{p.Pack}</td>
+                  <td className="px-4 py-3 text-stone-500 text-xs">{p.Size}</td>
+                  <td className="px-4 py-3 text-stone-500 text-xs">{p.Pack}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`font-semibold ${
-                        inStock ? "text-green-400" : "text-red-400"
-                      }`}
-                    >
+                    <span className={`font-bold ${inStock ? "text-green-600" : "text-red-600"}`}>
                       {Number(p.CurrentStock).toFixed(0)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-300">${Number(p.Price).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-amber-400 font-medium">
-                    ${Number(p.OnlinePrice).toFixed(2)}
-                  </td>
+                  <td className="px-4 py-3 text-stone-700 font-medium">${Number(p.Price).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-yellow-600 font-semibold">${Number(p.OnlinePrice).toFixed(2)}</td>
                   <td className="px-4 py-3 text-stone-500 font-mono text-xs">{p.ItemUPC}</td>
                 </tr>
               );
@@ -220,28 +214,26 @@ export default function ProductTable({ products }: { products: Product[] }) {
         </table>
 
         {paginated.length === 0 && (
-          <div className="text-center py-16 text-stone-500">No products match your filter.</div>
+          <div className="text-center py-16 text-stone-500 text-sm">No products match your filter.</div>
         )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-stone-400">
-          <span>
-            Page {page} of {totalPages}
-          </span>
+        <div className="flex items-center justify-between text-sm text-stone-500">
+          <span>Page {page} of {totalPages}</span>
           <div className="flex gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 bg-stone-800 rounded-lg disabled:opacity-30 hover:bg-stone-700 transition-colors"
+              className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm disabled:opacity-30 hover:bg-stone-50 transition-colors"
             >
               Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 bg-stone-800 rounded-lg disabled:opacity-30 hover:bg-stone-700 transition-colors"
+              className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm disabled:opacity-30 hover:bg-stone-700 transition-colors"
             >
               Next
             </button>

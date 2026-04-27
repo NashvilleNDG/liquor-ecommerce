@@ -48,7 +48,7 @@ export default function EventsAdminClient({ initialEvents }: Props) {
   const sorted = [...events].sort((a, b) => b.date.localeCompare(a.date));
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-white">
       <div className="bg-white border-b border-stone-200 sticky top-0 z-10">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div>

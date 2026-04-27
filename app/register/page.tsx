@@ -70,7 +70,7 @@ export default function RegisterPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-stone-50 py-16 px-4">
+      <main className="min-h-screen bg-white py-16 px-4">
         <div className="max-w-md mx-auto bg-white border border-stone-200 rounded-2xl p-8 shadow-sm">
           {/* Top accent / icon */}
           <div className="flex flex-col items-center mb-8">

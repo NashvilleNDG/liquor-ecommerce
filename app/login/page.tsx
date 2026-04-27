@@ -93,7 +93,7 @@ export default function LoginPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-stone-50 py-16 px-4">
+      <main className="min-h-screen bg-white py-16 px-4">
         <Suspense fallback={<div className="max-w-md mx-auto text-center text-stone-400 py-16">Loading…</div>}>
           <LoginForm />
         </Suspense>

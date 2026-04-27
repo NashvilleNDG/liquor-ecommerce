@@ -34,7 +34,7 @@ export default function OrdersPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-stone-50">
+      <div className="min-h-screen bg-white">
         <div className="max-w-screen-md mx-auto px-4 sm:px-6 py-8 sm:py-10">
 
           <Link

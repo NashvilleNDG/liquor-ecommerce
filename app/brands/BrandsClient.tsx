@@ -76,7 +76,7 @@ export default function BrandsClient({ brands }: { brands: Brand[] }) {
   const featured = brands.slice(0, 10);
 
   return (
-    <div className="bg-stone-50 min-h-screen">
+    <div className="bg-white min-h-screen">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-10 space-y-12">
 
         {/* ── Featured Brands ── */}

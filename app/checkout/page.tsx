@@ -111,7 +111,7 @@ export default function CheckoutPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-stone-50">
+      <div className="min-h-screen bg-white">
         <div className="max-w-screen-lg mx-auto px-4 sm:px-6 py-8 sm:py-10">
 
           <Link href="/shop" className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 transition-colors mb-6">
