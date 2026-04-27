@@ -23,8 +23,9 @@ const HIDDEN_DEPTS = [
   "CIGARS", "Cigars", "CIGAR", "Vape", "VAPE", "E-Cigarette", "E-CIGARETTE",
 ];
 
-const LIMIT    = 150; // Go-UPC credits available
-const DELAY_MS = 600; // max 2 req/sec — stay safe at ~1.6/sec
+const LIMIT        = 100; // UPCitemdb free tier: 100/day
+const DELAY_MS     = 800;
+const USE_GO_UPC   = false; // set true when Go-UPC credits are topped up
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -43,16 +44,29 @@ async function lookupGoUPC(upc) {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; LiquorStore/1.0)" },
     });
     if (res.status === 404) return null;
-    if (!res.ok) {
-      console.error(`  HTTP ${res.status}`);
-      return null;
-    }
+    if (!res.ok) return null;
     const data = await res.json();
     return data?.product?.imageUrl ?? null;
-  } catch (e) {
-    console.error("  Error:", e.message);
-    return null;
+  } catch { return null; }
+}
+
+async function lookupUPCitemdb(upc) {
+  try {
+    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; LiquorStore/1.0)" },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.items?.[0]?.images?.[0] ?? null;
+  } catch { return null; }
+}
+
+async function lookupImage(upc) {
+  if (USE_GO_UPC) {
+    const img = await lookupGoUPC(upc);
+    if (img) return img;
   }
+  return await lookupUPCitemdb(upc);
 }
 
 async function main() {
@@ -78,7 +92,8 @@ async function main() {
   const todo  = products.filter(p => !(p.ItemUPC in cache));
   const batch = todo.slice(0, LIMIT);
 
-  console.log(`\nLooking up ${batch.length} products via Go-UPC (limit: ${LIMIT})...\n`);
+  const source = USE_GO_UPC ? "Go-UPC → UPCitemdb fallback" : "UPCitemdb";
+  console.log(`\nLooking up ${batch.length} products via ${source} (limit: ${LIMIT})...\n`);
 
   let found    = 0;
   let notFound = 0;
@@ -87,7 +102,7 @@ async function main() {
     const p = batch[i];
     process.stdout.write(`[${i + 1}/${batch.length}] ${p.ItemName.slice(0, 45).padEnd(45)} `);
 
-    const image = await lookupGoUPC(p.ItemUPC);
+    const image = await lookupImage(p.ItemUPC);
     cache[p.ItemUPC] = image;
 
     if (image) {
