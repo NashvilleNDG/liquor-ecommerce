@@ -559,34 +559,14 @@ export default function ShopClient({ products, departments, pairingTagsMap }: Pr
       {/* ── Page header ── */}
       <div className="border-b border-stone-200 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/40 backdrop-blur-sm">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="font-heading text-2xl font-bold text-stone-900 dark:text-white">
-                {activePairing ? `${activePairing.emoji} Pairs with ${activePairing.label}` : "Browse Products"}
-              </h1>
-              <p className="text-stone-500 text-sm mt-0.5">
-                {activePairing
-                  ? `Products that go great with ${activePairing.label.toLowerCase()}`
-                  : `${products.length.toLocaleString()} products across ${departments.length} categories`}
-              </p>
-            </div>
-
-            {/* Search bar */}
-            <div className="relative w-full sm:w-80 lg:w-96">
-              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search spirits, beer, wine…"
-                className="w-full bg-stone-100 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 focus:border-amber-500 dark:focus:border-yellow-600/60 rounded-xl pl-10 pr-9 py-2.5 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-600 outline-none transition-all"
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-white transition-colors">
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-          </div>
+          <h1 className="font-heading text-2xl font-bold text-stone-900 dark:text-white">
+            {activePairing ? `${activePairing.emoji} Pairs with ${activePairing.label}` : "Browse Products"}
+          </h1>
+          <p className="text-stone-500 text-sm mt-0.5">
+            {activePairing
+              ? `Products that go great with ${activePairing.label.toLowerCase()}`
+              : `${products.length.toLocaleString()} products across ${departments.length} categories`}
+          </p>
         </div>
       </div>
 
