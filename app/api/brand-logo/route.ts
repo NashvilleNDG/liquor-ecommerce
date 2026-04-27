@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CACHE = new Map<string, { buf: Buffer; mime: string; ts: number }>();
+const CACHE = new Map<string, { buf: Uint8Array; mime: string; ts: number }>();
 const TTL_MS = 24 * 60 * 60 * 1000; // 24 h in-memory cache
 
 export async function GET(req: NextRequest) {
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       // Only accept actual image responses
       if (!mime.startsWith("image/")) continue;
 
-      const buf = Buffer.from(await res.arrayBuffer());
+      const buf = new Uint8Array(await res.arrayBuffer());
       if (buf.length < 500) continue; // Skip tiny placeholder images
 
       CACHE.set(domain, { buf, mime, ts: Date.now() });
