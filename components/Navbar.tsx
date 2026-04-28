@@ -160,7 +160,7 @@ function NavItem({ label, menu, href }: { label: string; menu?: MenuData; href?:
     return (
       <Link
         href={href ?? "/shop"}
-        className="px-3 py-5 text-sm font-bold text-stone-700 hover:text-crimson border-b-2 border-transparent hover:border-crimson transition-all whitespace-nowrap"
+        className="px-3 py-[15px] text-sm font-extrabold text-stone-700 hover:text-crimson border-b-2 border-transparent hover:border-crimson transition-all whitespace-nowrap"
       >
         {label}
       </Link>
@@ -175,7 +175,7 @@ function NavItem({ label, menu, href }: { label: string; menu?: MenuData; href?:
       onMouseLeave={() => setOpen(false)}
     >
       <button
-        className={`flex items-center gap-1 px-3 py-5 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${
+        className={`flex items-center gap-1 px-3 py-[15px] text-sm font-extrabold border-b-2 transition-all whitespace-nowrap ${
           open
             ? "text-crimson border-crimson"
             : "text-stone-700 hover:text-crimson border-transparent hover:border-crimson"
