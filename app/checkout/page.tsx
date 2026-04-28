@@ -425,7 +425,7 @@ export default function CheckoutPage() {
                             autoComplete="off"
                             value={form.address}
                             onChange={(e) => { set("address")(e.target.value); setShowSuggestions(true); }}
-                            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                            onFocus={() => predictions.length > 0 && setShowSuggestions(true)}
                             className="w-full bg-white border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors py-3 pl-10 pr-4"
                           />
                         </div>
