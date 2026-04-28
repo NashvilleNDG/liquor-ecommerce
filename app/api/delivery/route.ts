@@ -5,15 +5,9 @@ import path from "path";
 const FILE = path.join(process.cwd(), "data", "delivery.json");
 
 export interface ThirdPartyDeliveryProvider {
-  enabled:       boolean;
-  // DoorDash Drive credentials
-  developerId?:  string;
-  keyId?:        string;
-  signingSecret?: string;
-  // Uber Direct credentials
-  clientId?:     string;
-  clientSecret?: string;
-  customerId?:   string;
+  enabled:     boolean;
+  merchantId?: string;  // DoorDash: store's business/merchant ID
+  customerId?: string;  // Uber Direct: store's customer account ID
 }
 
 export interface DeliverySettings {
@@ -44,8 +38,8 @@ const DEFAULTS: DeliverySettings = {
   freeThreshold: 75, estimatedTime: "45–60 minutes",
   maxDistance: 15, zones: [],
   thirdParty: {
-    doordash: { enabled: false, developerId: "", keyId: "", signingSecret: "" },
-    uber:     { enabled: false, clientId: "", clientSecret: "", customerId: "" },
+    doordash: { enabled: false, merchantId: "" },
+    uber:     { enabled: false, customerId: "" },
   },
 };
 

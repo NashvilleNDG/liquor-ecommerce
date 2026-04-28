@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Truck, Plus, Save, Loader2, CheckCircle, X, ExternalLink, Info } from "lucide-react";
+import { Truck, Plus, Save, Loader2, CheckCircle, X, ExternalLink, Info, Lock } from "lucide-react";
 import type { DeliverySettings, DeliveryZone, ThirdPartyDeliveryProvider } from "@/app/api/delivery/route";
 
 const inp = "w-full bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:outline-none focus:border-amber-400 transition-colors placeholder-stone-400";
@@ -17,13 +17,15 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
 }
 
 function ProviderCard({
-  logo, name, color, docs, fields, cfg, onChange,
+  logo, name, color, docs, storeIdKey, storeIdLabel, storeIdPlaceholder, cfg, onChange,
 }: {
   logo: React.ReactNode;
   name: string;
   color: string;
   docs: string;
-  fields: { key: keyof ThirdPartyDeliveryProvider; label: string; placeholder: string }[];
+  storeIdKey: "merchantId" | "customerId";
+  storeIdLabel: string;
+  storeIdPlaceholder: string;
   cfg: ThirdPartyDeliveryProvider;
   onChange: (patch: Partial<ThirdPartyDeliveryProvider>) => void;
 }) {
@@ -44,20 +46,22 @@ function ProviderCard({
       </div>
 
       {cfg.enabled && (
-        <div className="px-5 py-4 grid sm:grid-cols-2 gap-3">
-          {fields.map(({ key, label, placeholder }) => (
-            <div key={key}>
-              <label className="block text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">{label}</label>
-              <input
-                className={inpSm}
-                type="password"
-                autoComplete="off"
-                value={(cfg[key] as string) ?? ""}
-                onChange={(e) => onChange({ [key]: e.target.value })}
-                placeholder={placeholder}
-              />
-            </div>
-          ))}
+        <div className="px-5 py-4 space-y-3">
+          <div className="bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs text-stone-500">
+            <Lock size={12} className="mt-0.5 shrink-0 text-stone-400" />
+            <span>Platform API credentials (Developer ID, Key, Secret) are stored in <code className="font-mono bg-stone-100 px-1 rounded">.env.local</code> by NDG. Only the store-specific ID below is saved here.</span>
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">{storeIdLabel}</label>
+            <input
+              className={inpSm}
+              type="text"
+              autoComplete="off"
+              value={(cfg[storeIdKey] as string) ?? ""}
+              onChange={(e) => onChange({ [storeIdKey]: e.target.value })}
+              placeholder={storeIdPlaceholder}
+            />
+          </div>
         </div>
       )}
     </div>
@@ -253,11 +257,9 @@ export default function DeliveryPage() {
                   <span className="text-white font-black text-sm">DD</span>
                 </div>
               }
-              fields={[
-                { key: "developerId",  label: "Developer ID",    placeholder: "your_developer_id" },
-                { key: "keyId",        label: "Key ID",          placeholder: "your_key_id" },
-                { key: "signingSecret", label: "Signing Secret", placeholder: "your_signing_secret" },
-              ]}
+              storeIdKey="merchantId"
+              storeIdLabel="Store Merchant ID"
+              storeIdPlaceholder="your_doordash_merchant_id"
               cfg={form.thirdParty?.doordash ?? { enabled: false }}
               onChange={(patch) => patchProvider("doordash", patch)}
             />
@@ -272,11 +274,9 @@ export default function DeliveryPage() {
                   <span className="text-white font-black text-sm">Ub</span>
                 </div>
               }
-              fields={[
-                { key: "clientId",     label: "Client ID",     placeholder: "your_client_id" },
-                { key: "clientSecret", label: "Client Secret", placeholder: "your_client_secret" },
-                { key: "customerId",   label: "Customer ID",   placeholder: "your_uber_customer_id" },
-              ]}
+              storeIdKey="customerId"
+              storeIdLabel="Store Customer Account ID"
+              storeIdPlaceholder="your_uber_customer_id"
               cfg={form.thirdParty?.uber ?? { enabled: false }}
               onChange={(patch) => patchProvider("uber", patch)}
             />
