@@ -105,7 +105,8 @@ export default function CheckoutPage() {
     address: "", city: "", state: "", zip: "",
     notes: "",
   });
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting,    setSubmitting]    = useState(false);
+  const [ageConfirmed,  setAgeConfirmed]  = useState(false);
 
   // Address autocomplete
   const [suggestions,     setSuggestions]     = useState<{ display: string; street: string; city: string; state: string; zip: string }[]>([]);
@@ -468,6 +469,11 @@ export default function CheckoutPage() {
                     <p className="text-stone-600 text-sm">
                       {store.address}, {store.city}, {store.state} {store.zip}
                     </p>
+                    {store.phone && (
+                      <a href={`tel:${store.phone}`} className="text-sm text-crimson hover:underline flex items-center gap-1">
+                        <Phone size={12} /> {store.phone}
+                      </a>
+                    )}
                     <p className="text-stone-500 text-xs">
                       {store.hoursMonFri} · {store.hoursSat} · {store.hoursSun}
                     </p>
@@ -609,8 +615,14 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Age confirmation */}
-                  <div className="flex items-start gap-2 bg-stone-50 rounded-xl p-3 border border-stone-100">
-                    <input type="checkbox" id="age21" required className="mt-0.5 accent-crimson w-4 h-4 flex-shrink-0 cursor-pointer" />
+                  <div className={`flex items-start gap-2 rounded-xl p-3 border transition-colors ${ageConfirmed ? "bg-green-50 border-green-200" : "bg-stone-50 border-stone-200"}`}>
+                    <input
+                      type="checkbox"
+                      id="age21"
+                      checked={ageConfirmed}
+                      onChange={(e) => setAgeConfirmed(e.target.checked)}
+                      className="mt-0.5 accent-crimson w-4 h-4 flex-shrink-0 cursor-pointer"
+                    />
                     <label htmlFor="age21" className="text-xs text-stone-500 cursor-pointer">
                       I confirm I am <strong className="text-stone-900">21 years or older</strong> and agree to the age verification policy.
                     </label>
@@ -620,6 +632,7 @@ export default function CheckoutPage() {
                     amount={orderTotal}
                     onSuccess={saveOrder}
                     submitting={submitting}
+                    disabled={!ageConfirmed}
                   />
                 </div>
               </div>

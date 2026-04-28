@@ -14,7 +14,7 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 );
 
-function PaymentForm({ onSuccess, submitting }: { onSuccess: () => void; submitting: boolean }) {
+function PaymentForm({ onSuccess, submitting, disabled }: { onSuccess: () => void; submitting: boolean; disabled?: boolean }) {
   const stripe   = useStripe();
   const elements = useElements();
   const [error, setError]       = useState("");
@@ -44,7 +44,7 @@ function PaymentForm({ onSuccess, submitting }: { onSuccess: () => void; submitt
       {error && <p className="text-sm text-red-500">{error}</p>}
       <button
         type="submit"
-        disabled={!stripe || loading || submitting}
+        disabled={!stripe || loading || submitting || disabled}
         className="w-full flex items-center justify-center gap-2 bg-crimson hover:bg-crimson-dark disabled:opacity-60 text-white font-bold py-4 rounded-2xl transition-all shadow-md text-base"
       >
         {loading ? (
@@ -61,10 +61,12 @@ export default function StripeCheckout({
   amount,
   onSuccess,
   submitting,
+  disabled,
 }: {
   amount: number;
   onSuccess: () => void;
   submitting: boolean;
+  disabled?: boolean;
 }) {
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading]           = useState(true);
@@ -114,8 +116,8 @@ export default function StripeCheckout({
         </div>
         <button
           type="submit"
-          disabled={submitting}
-          className="w-full flex items-center justify-center gap-2 bg-crimson hover:bg-crimson-dark disabled:opacity-60 text-white font-bold py-4 rounded-2xl transition-all shadow-md text-base"
+          disabled={submitting || disabled}
+          className="w-full flex items-center justify-center gap-2 bg-crimson hover:bg-crimson-dark disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition-all shadow-md text-base"
         >
           {submitting ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -129,7 +131,7 @@ export default function StripeCheckout({
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-      <PaymentForm onSuccess={onSuccess} submitting={submitting} />
+      <PaymentForm onSuccess={onSuccess} submitting={submitting} disabled={disabled} />
     </Elements>
   );
 }
