@@ -70,7 +70,7 @@ function Field({
           required={required}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full bg-stone-50 border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors py-3 ${Icon ? "pl-10 pr-4" : "px-4"}`}
+          className={`w-full bg-white border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors py-3 ${Icon ? "pl-10 pr-4" : "px-4"}`}
         />
       </div>
     </div>
@@ -424,7 +424,7 @@ export default function CheckoutPage() {
                             value={form.address}
                             onChange={(e) => { set("address")(e.target.value); setShowSuggestions(true); }}
                             onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                            className="w-full bg-stone-50 border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors py-3 pl-10 pr-4"
+                            className="w-full bg-white border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors py-3 pl-10 pr-4"
                           />
                         </div>
                       </div>
@@ -505,7 +505,7 @@ export default function CheckoutPage() {
                     value={form.notes}
                     onChange={(e) => set("notes")(e.target.value)}
                     rows={3}
-                    className="w-full bg-stone-50 border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors p-4 resize-none"
+                    className="w-full bg-white border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors p-4 resize-none"
                   />
                 </div>
               </div>
@@ -543,7 +543,7 @@ export default function CheckoutPage() {
                   ) : (
                     <div className="space-y-1">
                       <div className="flex gap-2">
-                        <div className="flex-1 flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2">
+                        <div className="flex-1 flex items-center gap-2 bg-white border border-stone-200 rounded-xl px-3 py-2">
                           <Tag size={12} className="text-stone-400 flex-shrink-0" />
                           <input
                             type="text"
@@ -619,7 +619,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Age confirmation */}
-                  <div className={`flex items-start gap-2 rounded-xl p-3 border transition-colors ${ageConfirmed ? "bg-green-50 border-green-200" : "bg-stone-50 border-stone-200"}`}>
+                  <div className={`flex items-start gap-2 rounded-xl p-3 border transition-colors ${ageConfirmed ? "bg-green-50 border-green-200" : "bg-white border-stone-200"}`}>
                     <input
                       type="checkbox"
                       id="age21"
