@@ -36,6 +36,19 @@ function haversineMiles(lat1: number, lon1: number, lat2: number, lon2: number):
 }
 
 async function geocode(address: string): Promise<{ lat: number; lon: number }> {
+  // Primary: US Census Bureau geocoder — free, no key, excellent US address coverage
+  try {
+    const censusRes = await fetch(
+      `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address)}&benchmark=Public_AR_Current&format=json`
+    );
+    const censusData = await censusRes.json();
+    const match = censusData?.result?.addressMatches?.[0];
+    if (match?.coordinates) {
+      return { lat: match.coordinates.y, lon: match.coordinates.x };
+    }
+  } catch { /* fall through to Nominatim */ }
+
+  // Fallback: OpenStreetMap Nominatim
   const res = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=us`,
     { headers: { "User-Agent": "StonesRiverBeverages/1.0 (delivery-quote)" } }

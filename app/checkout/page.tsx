@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
@@ -106,6 +106,56 @@ export default function CheckoutPage() {
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  // Address autocomplete
+  const [suggestions,     setSuggestions]     = useState<{ display: string; street: string; city: string; state: string; zip: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (mode !== "delivery") return;
+    const q = form.address.trim();
+    if (q.length < 4) { setSuggestions([]); setShowSuggestions(false); return; }
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ", Tennessee, US")}&format=json&limit=5&countrycodes=us&addressdetails=1`,
+          { headers: { "User-Agent": "StonesRiverBeverages/1.0" } }
+        );
+        const data = await res.json();
+        const parsed = (data as Record<string, unknown>[])
+          .filter((r) => (r.address as Record<string, string>)?.road)
+          .map((r) => {
+            const a = r.address as Record<string, string>;
+            return {
+              display: (r.display_name as string).split(",").slice(0, 4).join(",").trim(),
+              street:  `${a.house_number ?? ""} ${a.road ?? ""}`.trim(),
+              city:    a.city ?? a.town ?? a.village ?? "",
+              state:   a.state ?? "",
+              zip:     a.postcode ?? "",
+            };
+          });
+        setSuggestions(parsed);
+        setShowSuggestions(parsed.length > 0);
+      } catch { setSuggestions([]); }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [form.address, mode]);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function selectSuggestion(s: { street: string; city: string; state: string; zip: string }) {
+    setForm(f => ({ ...f, address: s.street, city: s.city, state: s.state, zip: s.zip }));
+    setShowSuggestions(false);
+  }
 
   // Distance-based delivery fee
   const [deliveryQuote, setDeliveryQuote] = useState<{ fee: number; miles: number } | null>(null);
@@ -358,7 +408,41 @@ export default function CheckoutPage() {
                 {mode === "delivery" && (
                   <div className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4">
                     <h2 className="text-xs font-bold text-stone-500 uppercase tracking-wider">Delivery Address</h2>
-                    <Field label="Street Address" id="address" placeholder="123 Main St" required value={form.address} onChange={set("address")} icon={MapPin} />
+                    <div className="relative" ref={suggestRef}>
+                      <div className="space-y-1.5">
+                        <label htmlFor="address" className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                          Street Address <span className="text-crimson">*</span>
+                        </label>
+                        <div className="relative">
+                          <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                          <input
+                            id="address"
+                            type="text"
+                            placeholder="123 Main St"
+                            required
+                            autoComplete="off"
+                            value={form.address}
+                            onChange={(e) => { set("address")(e.target.value); setShowSuggestions(true); }}
+                            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                            className="w-full bg-stone-50 border border-stone-200 focus:border-crimson rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none transition-colors py-3 pl-10 pr-4"
+                          />
+                        </div>
+                      </div>
+                      {showSuggestions && suggestions.length > 0 && (
+                        <ul className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden">
+                          {suggestions.map((s, i) => (
+                            <li
+                              key={i}
+                              onMouseDown={() => selectSuggestion(s)}
+                              className="px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-0 flex items-start gap-2"
+                            >
+                              <MapPin size={12} className="mt-0.5 shrink-0 text-stone-400" />
+                              <span>{s.display}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="sm:col-span-2">
                         <Field label="City"  id="city"  placeholder="Murfreesboro" required value={form.city}  onChange={set("city")} />
