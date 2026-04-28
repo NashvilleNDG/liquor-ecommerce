@@ -117,17 +117,18 @@ function TagInput({
 
 // ── Main component ──────────────────────────────────────────────────────────
 interface Props {
-  product:         Product;
-  initialOverride: ProductOverride;
+  product:          Product;
+  initialOverride:  ProductOverride;
+  cachedImageUrl?:  string | null;
 }
 
-export default function ProductDetailClient({ product, initialOverride }: Props) {
+export default function ProductDetailClient({ product, initialOverride, cachedImageUrl }: Props) {
   // Content
   const [websiteName,  setWebsiteName]  = useState(initialOverride.websiteName  ?? "");
   const [subtitle,     setSubtitle]     = useState(initialOverride.subtitle     ?? "");
   const [description,  setDescription]  = useState(initialOverride.description  ?? "");
   // Images
-  const [imageUrl,     setImageUrl]     = useState(initialOverride.imageUrl     ?? "");
+  const [imageUrl,     setImageUrl]     = useState(initialOverride.imageUrl ?? cachedImageUrl ?? "");
   const [addlImages,   setAddlImages]   = useState<string[]>(initialOverride.additionalImages ?? []);
   const [imageUrlDraft,setImageUrlDraft]= useState("");
   // Taxonomy

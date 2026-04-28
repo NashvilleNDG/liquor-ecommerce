@@ -3,18 +3,8 @@ import { fetchProducts } from "@/lib/kanji-api";
 import { deduplicateByVariant, getBaseName } from "@/lib/product-variants";
 import { readTags } from "@/lib/pairing-tags";
 import { readOverrides } from "@/lib/product-overrides";
-import { getProductImage } from "@/lib/product-images";
-import { existsSync, readFileSync } from "fs";
-import path from "path";
+import { loadImageCache, resolveProductImage } from "@/lib/image-cache";
 import ShopClient from "./ShopClient";
-
-function loadImageCache(): Record<string, string | null> {
-  try {
-    const file = path.join(process.cwd(), "data", "product-images-cache.json");
-    if (!existsSync(file)) return {};
-    return JSON.parse(readFileSync(file, "utf-8"));
-  } catch { return {}; }
-}
 
 export const revalidate = 300;
 
@@ -48,7 +38,7 @@ export default async function ShopPage() {
       // Apply price override (replaces what's shown to the customer)
       Price:         ov?.onlinePrice ?? p.Price,
       _variantCount: variantCount.get(`${p.Department}::${getBaseName(p.ItemName)}`) ?? 1,
-      _imageUrl:     ov?.imageUrl ?? getProductImage(p.ItemUPC) ?? imageCache[p.ItemUPC] ?? null,
+      _imageUrl:     resolveProductImage(p.ItemUPC, ov?.imageUrl, imageCache),
       _featured:     ov?.featured ?? false,
       _label:        ov?.label ?? null,
     };

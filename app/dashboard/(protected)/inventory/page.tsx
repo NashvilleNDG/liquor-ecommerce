@@ -1,14 +1,16 @@
 import { fetchProducts } from "@/lib/kanji-api";
 import { readOverrides } from "@/lib/product-overrides";
+import { loadImageCache, resolveProductImage } from "@/lib/image-cache";
 import ProductTable from "@/components/ProductTable";
 import { Package, RefreshCw, Star, EyeOff, ImageIcon } from "lucide-react";
 
 export const revalidate = 300;
 
 export default async function InventoryPage() {
-  const [products, overrides] = await Promise.all([
+  const [products, overrides, imageCache] = await Promise.all([
     fetchProducts(),
     Promise.resolve(readOverrides()),
+    Promise.resolve(loadImageCache()),
   ]);
 
   const inStock    = products.filter((p) => Number(p.CurrentStock) > 0).length;
@@ -16,7 +18,8 @@ export default async function InventoryPage() {
   const lowStock   = products.filter((p) => Number(p.CurrentStock) > 0 && Number(p.CurrentStock) <= 5).length;
   const featured   = Object.values(overrides).filter((o) => o.featured).length;
   const hidden     = Object.values(overrides).filter((o) => o.hidden).length;
-  const hasImage   = Object.values(overrides).filter((o) => o.imageUrl).length;
+  // Count from all three image sources
+  const hasImage   = products.filter((p) => !!resolveProductImage(p.ItemUPC, overrides[p.ItemUPC]?.imageUrl, imageCache)).length;
 
   const stats = [
     { label: "Total SKUs",    value: products.length.toLocaleString(), color: "text-stone-900",  sub: "" },
@@ -69,7 +72,7 @@ export default async function InventoryPage() {
               <p className="text-xs text-stone-400 mt-0.5">Click <strong>Edit</strong> on any row to set images, labels, pricing, and visibility</p>
             </div>
           </div>
-          <ProductTable products={products} initialOverrides={overrides} />
+          <ProductTable products={products} initialOverrides={overrides} imageCache={imageCache} />
         </div>
       </div>
     </div>

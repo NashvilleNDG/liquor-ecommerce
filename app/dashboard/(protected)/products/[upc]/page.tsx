@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { fetchProducts } from "@/lib/kanji-api";
 import { readOverrides } from "@/lib/product-overrides";
+import { loadImageCache, resolveProductImage } from "@/lib/image-cache";
 import ProductDetailClient from "./ProductDetailClient";
 
 export const revalidate = 0;
@@ -10,19 +11,24 @@ interface Props {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
-  const { upc }    = await params;
-  const [products, overrides] = await Promise.all([
+  const { upc } = await params;
+  const [products, overrides, imageCache] = await Promise.all([
     fetchProducts(),
     Promise.resolve(readOverrides()),
+    Promise.resolve(loadImageCache()),
   ]);
 
   const product = products.find((p) => p.ItemUPC === upc);
   if (!product) notFound();
 
+  const override       = overrides[upc] ?? {};
+  const cachedImageUrl = resolveProductImage(upc, override.imageUrl, imageCache);
+
   return (
     <ProductDetailClient
       product={product}
-      initialOverride={overrides[upc] ?? {}}
+      initialOverride={override}
+      cachedImageUrl={cachedImageUrl}
     />
   );
 }

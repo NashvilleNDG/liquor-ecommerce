@@ -12,6 +12,8 @@ import type { Product } from "@/lib/kanji-api";
 import type { OverridesMap, ProductOverride } from "@/lib/product-overrides";
 import ProductEditPanel from "./ProductEditPanel";
 
+type ImageCache = Record<string, string | null>;
+
 // ── helpers ────────────────────────────────────────────────────────────────────
 
 const DEPT_EMOJI: Record<string, string> = {
@@ -69,11 +71,12 @@ const PAGE_SIZES = [20, 50, 100];
 interface Props {
   products:         Product[];
   initialOverrides: OverridesMap;
+  imageCache?:      ImageCache;
 }
 
 // ── component ──────────────────────────────────────────────────────────────────
 
-export default function ProductTable({ products, initialOverrides }: Props) {
+export default function ProductTable({ products, initialOverrides, imageCache = {} }: Props) {
   const [overrides,   setOverrides]   = useState<OverridesMap>(initialOverrides);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [selected,    setSelected]    = useState<Set<string>>(new Set());
@@ -306,7 +309,7 @@ export default function ProductTable({ products, initialOverrides }: Props) {
           const stock    = Number(p.CurrentStock);
           const inStock  = stock > 0;
           const lowStock = inStock && stock <= 5;
-          const imageUrl = ov?.imageUrl ?? null;
+          const imageUrl = ov?.imageUrl ?? imageCache[p.ItemUPC] ?? null;
           const emoji    = DEPT_EMOJI[p.Department] ?? "🍾";
           const isSelected = selected.has(p.ItemUPC);
           const displayPrice = ov?.onlinePrice ?? Number(p.OnlinePrice);
