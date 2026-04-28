@@ -12,6 +12,7 @@ import CountryCarousel from "@/components/CountryCarousel";
 import BrandsCarousel from "@/components/BrandsCarousel";
 import ProductRowCarousel from "@/components/ProductRowCarousel";
 import { ArrowRight, ChevronRight } from "lucide-react";
+import type { Banner } from "@/app/api/banners/route";
 
 const HIDDEN_DEPTS = ["DELIVERY FEE", "GROCERY", "Kegs", "KEG", "NOVELTY", "PROMOCODE",
   "Tobacco", "TOBACCO", "CBD", "THC", "Cigarette", "CIGARETTE",
@@ -23,6 +24,14 @@ function loadImageCache(): Record<string, string | null> {
     if (!existsSync(file)) return {};
     return JSON.parse(readFileSync(file, "utf-8"));
   } catch { return {}; }
+}
+
+function loadBanners(): Banner[] {
+  try {
+    const file = path.join(process.cwd(), "data", "banners.json");
+    if (!existsSync(file)) return [];
+    return JSON.parse(readFileSync(file, "utf-8"));
+  } catch { return []; }
 }
 
 export const revalidate = 300;
@@ -81,6 +90,7 @@ const BRANDS = [
 export default async function HomePage() {
   const allProducts = await fetchProducts();
   const imageCache  = loadImageCache();
+  const activeBanners = loadBanners().filter((b) => b.active).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const inStock = allProducts
     .filter((p) => Number(p.CurrentStock) > 0)
@@ -142,6 +152,28 @@ export default async function HomePage() {
             🎉 <span className="font-bold">Free Delivery</span> on orders $99+ · Same-day pickup available · Must be 21+
           </p>
         </div>
+
+        {/* ── Admin-managed promotional banners ── */}
+        {activeBanners.length > 0 && (
+          <div className="mt-4 flex gap-4 overflow-x-auto pb-1 scrollbar-none">
+            {activeBanners.map((banner) => (
+              <Link
+                key={banner.id}
+                href={banner.ctaLink || "/shop"}
+                className={`flex-shrink-0 w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.33%-11px)] bg-gradient-to-r ${banner.bgColor} rounded-2xl p-6 sm:p-8 text-white group hover:opacity-95 transition-opacity`}
+              >
+                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1">Special Offer</p>
+                <h3 className="text-xl sm:text-2xl font-black leading-tight mb-1">{banner.title}</h3>
+                {banner.subtitle && (
+                  <p className="text-white/70 text-sm mb-4 leading-relaxed">{banner.subtitle}</p>
+                )}
+                <span className="inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">
+                  {banner.ctaText || "Shop Now"} <ArrowRight size={12} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
 
       </div>
 

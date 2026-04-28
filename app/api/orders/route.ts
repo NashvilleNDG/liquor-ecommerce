@@ -51,6 +51,23 @@ export async function POST(req: NextRequest) {
   const order: AdminOrder = { ...body, id: body.id ?? `ORD-${Date.now()}` };
   orders.unshift(order);
   saveOrders(orders);
+
+  // Increment promo code usedCount if one was applied
+  if (order.promoCode) {
+    try {
+      const promoFile = path.join(process.cwd(), "data", "promo-codes.json");
+      if (fs.existsSync(promoFile)) {
+        const promos = JSON.parse(fs.readFileSync(promoFile, "utf8"));
+        const updated = promos.map((p: { code: string; usedCount: number }) =>
+          p.code.toUpperCase() === order.promoCode?.toUpperCase()
+            ? { ...p, usedCount: (p.usedCount || 0) + 1 }
+            : p
+        );
+        fs.writeFileSync(promoFile, JSON.stringify(updated, null, 2));
+      }
+    } catch { /* ignore — promo tracking is non-critical */ }
+  }
+
   return NextResponse.json(order, { status: 201 });
 }
 

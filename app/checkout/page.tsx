@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
@@ -10,15 +10,43 @@ import Link from "next/link";
 import StripeCheckout from "@/components/StripeCheckout";
 import {
   ShoppingBag, ArrowLeft, Truck, Store,
-  User, Mail, Phone, MapPin, Tag, X,
+  User, Mail, Phone, MapPin, Tag, X, Loader2, CheckCircle,
 } from "lucide-react";
 
 type DeliveryMode = "delivery" | "pickup";
 
-const VALID_PROMOS: Record<string, number> = {
-  WELCOME10: 0.10,
-  SRTB15:    0.15,
-  SAVE20:    0.20,
+interface DeliverySettings {
+  enabled: boolean;
+  fee: number;
+  freeThreshold: number;
+  estimatedTime: string;
+  maxDistance: number;
+}
+
+interface StoreSettings {
+  storeName: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  taxRate: number;
+  minOrderAmount: number;
+  hoursMonFri: string;
+  hoursSat: string;
+  hoursSun: string;
+  phone: string;
+}
+
+const DEFAULT_DELIVERY: DeliverySettings = {
+  enabled: true, fee: 9.99, freeThreshold: 99,
+  estimatedTime: "45–60 minutes", maxDistance: 15,
+};
+const DEFAULT_STORE: StoreSettings = {
+  storeName: "Stones River Total Beverages",
+  address: "208 North Thompson Lane", city: "Murfreesboro", state: "TN", zip: "37129",
+  taxRate: 9.75, minOrderAmount: 0,
+  hoursMonFri: "Mon–Fri 9AM–10PM", hoursSat: "Sat 9AM–11PM", hoursSun: "Sun 12PM–8PM",
+  phone: "(615) 555-0100",
 };
 
 function Field({
@@ -53,43 +81,152 @@ export default function CheckoutPage() {
   const { state, dispatch } = useCart();
   const router = useRouter();
   const { addOrder } = useOrderHistory();
-  const subtotal = state.items.reduce((s, i) => s + Number(i.Price) * i.quantity, 0);
-  const tax      = subtotal * 0.0975; // Tennessee sales tax ~9.75%
-  const freeShip = subtotal >= 99;
 
-  const [mode, setMode]     = useState<DeliveryMode>("delivery");
-  const [form, setForm]     = useState({
+  // Dynamic settings loaded from admin dashboard
+  const [delivery, setDelivery] = useState<DeliverySettings>(DEFAULT_DELIVERY);
+  const [store,    setStore]    = useState<StoreSettings>(DEFAULT_STORE);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/delivery").then(r => r.json()).catch(() => DEFAULT_DELIVERY),
+      fetch("/api/settings").then(r => r.json()).catch(() => DEFAULT_STORE),
+    ]).then(([d, s]) => {
+      setDelivery({ ...DEFAULT_DELIVERY, ...d });
+      setStore({ ...DEFAULT_STORE, ...s });
+      setSettingsLoaded(true);
+    });
+  }, []);
+
+  const subtotal = state.items.reduce((s, i) => s + Number(i.Price) * i.quantity, 0);
+  const [mode, setMode] = useState<DeliveryMode>("delivery");
+  const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", phone: "",
     address: "", city: "", state: "", zip: "",
     notes: "",
   });
-  const [submitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [promoInput, setPromoInput]   = useState("");
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
-  const [promoError, setPromoError]   = useState("");
+  // Promo code state
+  const [promoInput,    setPromoInput]    = useState("");
+  const [appliedCode,   setAppliedCode]   = useState<string | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [appliedType,   setAppliedType]   = useState<"percent" | "fixed">("percent");
+  const [appliedValue,  setAppliedValue]  = useState(0);
+  const [promoError,    setPromoError]    = useState("");
+  const [promoLoading,  setPromoLoading]  = useState(false);
 
-  const discount      = appliedCode ? subtotal * (VALID_PROMOS[appliedCode] ?? 0) : 0;
-  const deliveryFee   = freeShip || mode === "pickup" ? 0 : 9.99;
-  const orderTotal    = subtotal - discount + tax + deliveryFee;
+  // Dynamic calculations using admin settings
+  const taxRate      = (store.taxRate ?? 9.75) / 100;
+  const tax          = subtotal * taxRate;
+  const isFreeShip   = delivery.freeThreshold > 0 && subtotal >= delivery.freeThreshold;
+  const deliveryFee  = isFreeShip || mode === "pickup" ? 0 : delivery.fee;
+  const discount     = appliedCode ? appliedDiscount : 0;
+  const orderTotal   = Math.max(0, subtotal - discount + tax + deliveryFee);
 
   function set(field: keyof typeof form) {
     return (v: string) => setForm((f) => ({ ...f, [field]: v }));
   }
 
-  function applyPromo() {
+  async function applyPromo() {
     const code = promoInput.trim().toUpperCase();
-    if (VALID_PROMOS[code]) {
-      setAppliedCode(code);
-      setPromoError("");
-      setPromoInput("");
-    } else {
-      setPromoError("Invalid promo code");
+    if (!code) return;
+    setPromoLoading(true);
+    setPromoError("");
+    try {
+      const res = await fetch("/api/promo-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, orderAmount: subtotal }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedCode(data.code);
+        setAppliedDiscount(data.discountAmount);
+        setAppliedType(data.type);
+        setAppliedValue(data.value);
+        setPromoInput("");
+      } else {
+        setPromoError(data.error ?? "Invalid promo code");
+      }
+    } catch {
+      setPromoError("Could not validate code. Try again.");
     }
+    setPromoLoading(false);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function removePromo() {
+    setAppliedCode(null);
+    setAppliedDiscount(0);
+  }
+
+  async function saveOrder() {
+    if (submitting) return;
+    setSubmitting(true);
+    const orderId = `ORD-${Date.now()}`;
+    const address =
+      mode === "delivery"
+        ? `${form.address}, ${form.city}, ${form.state} ${form.zip}`.trim()
+        : undefined;
+
+    const orderPayload = {
+      id: orderId,
+      date: new Date().toISOString(),
+      customer: `${form.firstName} ${form.lastName}`.trim() || "Guest",
+      email: form.email,
+      items: state.items.map((item) => ({
+        name: item.ItemName,
+        qty: item.quantity,
+        price: Number(item.Price),
+      })),
+      subtotal,
+      discount,
+      tax,
+      delivery: deliveryFee,
+      total: orderTotal,
+      mode,
+      address,
+      promoCode: appliedCode ?? undefined,
+      status: "pending" as const,
+      notes: form.notes || undefined,
+    };
+
+    // Save to admin dashboard orders
+    await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderPayload),
+    }).catch(() => {/* non-critical */});
+
+    // Also save to user's local order history
+    addOrder({
+      id: orderId,
+      date: orderPayload.date,
+      items: state.items.map((item) => ({
+        name: item.ItemName,
+        upc: item.ItemUPC,
+        qty: item.quantity,
+        price: Number(item.Price),
+        dept: item.Department ?? "",
+      })),
+      subtotal,
+      discount,
+      tax,
+      delivery: deliveryFee,
+      total: orderTotal,
+      mode,
+      address,
+      promoCode: appliedCode ?? undefined,
+      status: "processing",
+    });
+
+    dispatch({ type: "CLEAR" });
+    router.push(`/checkout/success?order=${orderId}`);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    await saveOrder();
   }
 
   if (state.items.length === 0 && !submitting) {
@@ -107,6 +244,12 @@ export default function CheckoutPage() {
       </>
     );
   }
+
+  const promoLabel = appliedCode
+    ? appliedType === "percent"
+      ? `${appliedValue}% off`
+      : `$${appliedValue.toFixed(2)} off`
+    : "";
 
   return (
     <>
@@ -131,14 +274,20 @@ export default function CheckoutPage() {
                   <h2 className="text-xs font-bold text-stone-500 uppercase tracking-wider">Fulfillment Method</h2>
                   <div className="grid grid-cols-2 gap-3">
                     {([
-                      { id: "delivery", label: "Home Delivery", icon: Truck,  desc: "Free over $99" },
-                      { id: "pickup",   label: "Store Pickup",  icon: Store,  desc: "Ready same day" },
+                      {
+                        id: "delivery", label: "Home Delivery", icon: Truck,
+                        desc: delivery.freeThreshold > 0
+                          ? `Free over $${delivery.freeThreshold}`
+                          : delivery.enabled ? `$${delivery.fee.toFixed(2)} fee` : "Unavailable",
+                      },
+                      { id: "pickup", label: "Store Pickup",  icon: Store, desc: "Ready same day" },
                     ] as { id: DeliveryMode; label: string; icon: React.ElementType; desc: string }[]).map(({ id, label, icon: Icon, desc }) => (
                       <button
                         key={id}
                         type="button"
                         onClick={() => setMode(id)}
-                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all text-center ${
+                        disabled={id === "delivery" && !delivery.enabled}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all text-center disabled:opacity-40 disabled:cursor-not-allowed ${
                           mode === id
                             ? "border-crimson bg-red-50 text-crimson"
                             : "border-stone-200 bg-stone-50 text-stone-500 hover:border-stone-300"
@@ -150,6 +299,11 @@ export default function CheckoutPage() {
                       </button>
                     ))}
                   </div>
+                  {mode === "delivery" && delivery.estimatedTime && (
+                    <p className="text-xs text-stone-400 flex items-center gap-1.5">
+                      <Truck size={11} /> Estimated delivery: <strong>{delivery.estimatedTime}</strong>
+                    </p>
+                  )}
                 </div>
 
                 {/* Contact info */}
@@ -175,30 +329,38 @@ export default function CheckoutPage() {
                       <Field label="State" id="state" placeholder="TN" required value={form.state} onChange={set("state")} />
                     </div>
                     <Field label="ZIP Code" id="zip" placeholder="37129" required value={form.zip} onChange={set("zip")} />
-                    <p className="text-xs text-stone-400">
-                      We currently deliver within Rutherford County and surrounding areas. Enter your address to confirm availability.
-                    </p>
+                    {delivery.maxDistance > 0 && (
+                      <p className="text-xs text-stone-400">
+                        We deliver within {delivery.maxDistance} miles. Enter your address to confirm availability.
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {/* Pickup info */}
+                {/* Pickup info — dynamic from settings */}
                 {mode === "pickup" && (
                   <div className="bg-red-50 border border-red-100 rounded-2xl p-5 space-y-2">
                     <div className="flex items-center gap-2 text-crimson font-bold text-sm">
                       <Store size={16} /> Pickup Location
                     </div>
-                    <p className="text-stone-800 font-semibold text-sm">Stones River Total Beverages</p>
-                    <p className="text-stone-600 text-sm">208 North Thompson Lane, Murfreesboro, TN 37129</p>
-                    <p className="text-stone-500 text-xs">Mon–Thu 9AM–10PM · Fri–Sat 9AM–11PM · Sun 12PM–8PM</p>
+                    <p className="text-stone-800 font-semibold text-sm">{store.storeName}</p>
+                    <p className="text-stone-600 text-sm">
+                      {store.address}, {store.city}, {store.state} {store.zip}
+                    </p>
+                    <p className="text-stone-500 text-xs">
+                      {store.hoursMonFri} · {store.hoursSat} · {store.hoursSun}
+                    </p>
                     <a
-                      href="https://maps.google.com/?q=208+North+Thompson+Lane+Murfreesboro+TN+37129"
+                      href={`https://maps.google.com/?q=${encodeURIComponent(`${store.address} ${store.city} ${store.state} ${store.zip}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-crimson hover:underline mt-1"
                     >
                       <MapPin size={11} /> Get directions
                     </a>
-                    <p className="text-stone-400 text-xs pt-1">We&apos;ll send a confirmation email when your order is ready.</p>
+                    <p className="text-stone-400 text-xs pt-1">
+                      We&apos;ll send a confirmation email when your order is ready.
+                    </p>
                   </div>
                 )}
 
@@ -236,14 +398,14 @@ export default function CheckoutPage() {
                     ))}
                   </div>
 
-                  {/* Promo code */}
+                  {/* Promo code — validates against admin dashboard codes */}
                   {appliedCode ? (
                     <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
                       <div className="flex items-center gap-2 text-green-700 text-xs font-bold">
-                        <Tag size={12} />
-                        {appliedCode} — {(VALID_PROMOS[appliedCode] * 100).toFixed(0)}% off
+                        <CheckCircle size={12} />
+                        {appliedCode} — {promoLabel}
                       </div>
-                      <button onClick={() => setAppliedCode(null)} className="text-green-400 hover:text-red-500 transition-colors">
+                      <button onClick={removePromo} className="text-green-400 hover:text-red-500 transition-colors">
                         <X size={13} />
                       </button>
                     </div>
@@ -255,25 +417,26 @@ export default function CheckoutPage() {
                           <input
                             type="text"
                             value={promoInput}
-                            onChange={(e) => { setPromoInput(e.target.value); setPromoError(""); }}
+                            onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
                             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyPromo())}
                             placeholder="Promo code"
-                            className="flex-1 bg-transparent text-xs text-stone-900 placeholder-stone-400 outline-none"
+                            className="flex-1 bg-transparent text-xs text-stone-900 placeholder-stone-400 outline-none uppercase"
                           />
                         </div>
                         <button
                           type="button"
                           onClick={applyPromo}
-                          className="bg-crimson hover:bg-crimson-dark text-white text-xs font-bold px-3 rounded-xl transition-colors"
+                          disabled={promoLoading || !promoInput.trim()}
+                          className="bg-crimson hover:bg-crimson-dark disabled:opacity-50 text-white text-xs font-bold px-3 rounded-xl transition-colors flex items-center gap-1"
                         >
-                          Apply
+                          {promoLoading ? <Loader2 size={11} className="animate-spin" /> : "Apply"}
                         </button>
                       </div>
                       {promoError && <p className="text-[11px] text-red-500 pl-1">{promoError}</p>}
                     </div>
                   )}
 
-                  {/* Totals */}
+                  {/* Totals — dynamic tax & delivery from admin settings */}
                   <div className="border-t border-stone-100 pt-3 space-y-1.5 text-sm">
                     <div className="flex justify-between text-stone-500">
                       <span>Subtotal</span><span>${subtotal.toFixed(2)}</span>
@@ -284,14 +447,26 @@ export default function CheckoutPage() {
                       </div>
                     )}
                     <div className="flex justify-between text-stone-500">
-                      <span>Tax (9.75%)</span><span>${tax.toFixed(2)}</span>
+                      <span>Tax ({store.taxRate}%)</span>
+                      <span>{settingsLoaded ? `$${tax.toFixed(2)}` : "…"}</span>
                     </div>
                     <div className="flex justify-between text-stone-500">
                       <span>Delivery</span>
                       <span className={deliveryFee === 0 ? "text-green-600 font-medium" : ""}>
-                        {deliveryFee === 0 ? "Free" : "$9.99"}
+                        {mode === "pickup"
+                          ? "Free (Pickup)"
+                          : isFreeShip
+                            ? "Free"
+                            : settingsLoaded
+                              ? `$${delivery.fee.toFixed(2)}`
+                              : "…"}
                       </span>
                     </div>
+                    {mode === "delivery" && !isFreeShip && delivery.freeThreshold > 0 && (
+                      <p className="text-[10px] text-stone-400">
+                        Add ${(delivery.freeThreshold - subtotal).toFixed(2)} more for free delivery
+                      </p>
+                    )}
                     <div className="flex justify-between text-stone-900 font-bold text-base border-t border-stone-100 pt-2">
                       <span>Total</span>
                       <span className="text-crimson">${orderTotal.toFixed(2)}</span>
@@ -308,35 +483,7 @@ export default function CheckoutPage() {
 
                   <StripeCheckout
                     amount={orderTotal}
-                    onSuccess={() => {
-                      const orderId = Math.random().toString(16).slice(2, 10).toUpperCase();
-                      const address =
-                        mode === "delivery"
-                          ? `${form.address}, ${form.city}, ${form.state} ${form.zip}`.trim()
-                          : undefined;
-                      addOrder({
-                        id: orderId,
-                        date: new Date().toISOString(),
-                        items: state.items.map((item) => ({
-                          name: item.ItemName,
-                          upc: item.ItemUPC,
-                          qty: item.quantity,
-                          price: Number(item.Price),
-                          dept: item.Department ?? "",
-                        })),
-                        subtotal,
-                        discount,
-                        tax,
-                        delivery: deliveryFee,
-                        total: orderTotal,
-                        mode,
-                        address,
-                        promoCode: appliedCode ?? undefined,
-                        status: "processing",
-                      });
-                      dispatch({ type: "CLEAR" });
-                      router.push(`/checkout/success?order=${orderId}`);
-                    }}
+                    onSuccess={saveOrder}
                     submitting={submitting}
                   />
                 </div>
