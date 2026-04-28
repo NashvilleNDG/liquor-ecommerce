@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { fetchProducts } from "@/lib/kanji-api";
 import { deduplicateByVariant, getBaseName } from "@/lib/product-variants";
 import { readTags } from "@/lib/pairing-tags";
+import { readOverrides } from "@/lib/product-overrides";
 import { getProductImage } from "@/lib/product-images";
 import { existsSync, readFileSync } from "fs";
 import path from "path";
@@ -21,7 +22,10 @@ const DEPT_ORDER = ["BEER", "Wines", "LIQUOR", "CBD", "Cigarette", "CIGARS", "So
 const HIDDEN_DEPTS = ["DELIVERY FEE", "GROCERY", "Kegs", "KEG", "NOVELTY", "PROMOCODE", "Tobacco", "TOBACCO", "CBD", "THC", "Cigarette", "CIGARETTE", "CIGARS", "Cigars", "CIGAR", "Vape", "VAPE", "E-Cigarette", "E-CIGARETTE"];
 
 export default async function ShopPage() {
-  const allProducts = await fetchProducts();
+  const [allProducts, overrides] = await Promise.all([
+    fetchProducts(),
+    Promise.resolve(readOverrides()),
+  ]);
 
   // Build variant count map: baseName::dept → total count
   const variantCount = new Map<string, number>();
@@ -30,14 +34,25 @@ export default async function ShopPage() {
     variantCount.set(key, (variantCount.get(key) ?? 0) + 1);
   }
 
-  // Show only the lowest-price variant per product group in the grid
   const imageCache = loadImageCache();
 
-  const products = deduplicateByVariant(allProducts.filter(p => !HIDDEN_DEPTS.includes(p.Department))).map((p) => ({
-    ...p,
-    _variantCount: variantCount.get(`${p.Department}::${getBaseName(p.ItemName)}`) ?? 1,
-    _imageUrl: getProductImage(p.ItemUPC) ?? imageCache[p.ItemUPC] ?? null,
-  }));
+  // Filter hidden products, then deduplicate variants
+  const visible = allProducts.filter(
+    (p) => !HIDDEN_DEPTS.includes(p.Department) && !overrides[p.ItemUPC]?.hidden
+  );
+
+  const products = deduplicateByVariant(visible).map((p) => {
+    const ov = overrides[p.ItemUPC];
+    return {
+      ...p,
+      // Apply price override (replaces what's shown to the customer)
+      Price:         ov?.onlinePrice ?? p.Price,
+      _variantCount: variantCount.get(`${p.Department}::${getBaseName(p.ItemName)}`) ?? 1,
+      _imageUrl:     ov?.imageUrl ?? getProductImage(p.ItemUPC) ?? imageCache[p.ItemUPC] ?? null,
+      _featured:     ov?.featured ?? false,
+      _label:        ov?.label ?? null,
+    };
+  });
 
   const departments = [
     ...DEPT_ORDER.filter((d) => products.some((p) => p.Department === d)),

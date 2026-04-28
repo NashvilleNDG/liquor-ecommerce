@@ -14,7 +14,7 @@ import ProductCard from "@/components/ProductCard";
 import ProductRow from "@/components/ProductRow";
 
 interface Props {
-  products: (Product & { _variantCount?: number })[];
+  products: (Product & { _variantCount?: number; _imageUrl?: string | null; _featured?: boolean; _label?: string | null })[];
   departments: string[];
   pairingTagsMap: PairingTagsMap;
 }

@@ -3,53 +3,58 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Star, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Star } from "lucide-react";
 import type { Product } from "@/lib/kanji-api";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import QuickViewModal from "@/components/QuickViewModal";
 
-type ProductWithVariants = Product & { _variantCount?: number; _imageUrl?: string | null };
+type ProductWithVariants = Product & {
+  _variantCount?: number;
+  _imageUrl?: string | null;
+  _featured?: boolean;
+  _label?: string | null;
+};
+
+const LABEL_STYLES: Record<string, string> = {
+  "Staff Pick":   "bg-amber-500 text-white",
+  "New Arrival":  "bg-green-500 text-white",
+  "Limited":      "bg-red-500 text-white",
+  "On Sale":      "bg-crimson text-white",
+  "Best Seller":  "bg-stone-900 text-white",
+  "Exclusive":    "bg-purple-600 text-white",
+};
+
+const DEPT_ICON: Record<string, string> = {
+  BEER: "🍺", Wines: "🍷", WINE: "🍷",
+  LIQUOR: "🥃", Spirits: "🥃", MIXERS: "🍹", Soda: "🥤",
+};
 
 export default function ProductCard({ product }: { product: ProductWithVariants }) {
-  const { dispatch } = useCart();
+  const { dispatch }                 = useCart();
   const { dispatch: wDispatch, isWishlisted } = useWishlist();
-  const [showQuickView, setShowQuickView] = useState(false);
-  const wishlisted = isWishlisted(product.ItemUPC);
-  const stock = Number(product.CurrentStock);
-  const inStock = stock > 0;
-  const lowStock = inStock && stock <= 5;
+  const [showQuickView, setShowQuickView]     = useState(false);
+
+  const wishlisted   = isWishlisted(product.ItemUPC);
+  const stock        = Number(product.CurrentStock);
+  const inStock      = stock > 0;
+  const lowStock     = inStock && stock <= 5;
   const variantCount = product._variantCount ?? 1;
-
-  const [imageUrl] = useState<string | null>(product._imageUrl ?? null);
-
-  // Stable fallback rating from UPC hash
-  const fallbackRating = (() => {
-    let hash = 0;
-    for (let i = 0; i < product.ItemUPC.length; i++)
-      hash = (hash * 31 + product.ItemUPC.charCodeAt(i)) >>> 0;
-    return { rating: Math.round((3.5 + (hash % 15) / 10) * 10) / 10, count: 10 + (hash % 491) };
-  })();
-
-  const DEPT_ICON: Record<string, string> = {
-    "BEER": "🍺", "Wines": "🍷", "WINE": "🍷",
-    "LIQUOR": "🥃", "MIXERS": "🍹", "Soda": "🥤",
-  };
-  const deptIcon = DEPT_ICON[product.Department] ?? "🍾";
-
-  const price = Number(product.Price);
-  const priceDisplay = `$${price.toFixed(2)}`;
+  const imageUrl     = product._imageUrl ?? null;
+  const label        = product._label ?? null;
+  const featured     = product._featured ?? false;
+  const deptIcon     = DEPT_ICON[product.Department] ?? "🍾";
+  const price        = Number(product.Price);
 
   return (
     <div className="group relative flex flex-col bg-white border border-stone-200 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5">
 
-      {/* ── Image area ── */}
+      {/* Image area */}
       <Link
         href={`/shop/${encodeURIComponent(product.ItemUPC)}`}
         className="relative block bg-white overflow-hidden"
         style={{ aspectRatio: "1 / 1" }}
       >
-        {/* Product image or emoji fallback */}
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -57,18 +62,24 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
             fill
             sizes="(max-width: 640px) 50vw, 220px"
             className="object-contain p-5 group-hover:scale-105 transition-transform duration-300"
+            unoptimized
           />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white">
+          <div className="absolute inset-0 flex items-center justify-center bg-white">
             <span className="text-6xl group-hover:scale-110 transition-transform duration-300 select-none">{deptIcon}</span>
           </div>
         )}
 
-        {/* Top-left: star + rating */}
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 shadow-sm">
-          <Star size={12} className="text-amber-400 fill-amber-400" />
-          <span className="text-xs font-bold text-stone-700">{fallbackRating.rating.toFixed(1)}</span>
-        </div>
+        {/* Top-left: label badge or featured star */}
+        {label ? (
+          <span className={`absolute top-2.5 left-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ${LABEL_STYLES[label] ?? "bg-stone-800 text-white"}`}>
+            {label}
+          </span>
+        ) : featured ? (
+          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-0.5 text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+            <Star size={9} className="fill-white" /> Featured
+          </span>
+        ) : null}
 
         {/* Top-right: wishlist */}
         <button
@@ -106,18 +117,15 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
         </button>
       </Link>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="flex flex-col flex-1 px-3.5 pt-3 pb-3.5 gap-1.5">
-
-        {/* Price */}
         <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-black text-stone-900">
-            {variantCount > 1 ? <span className="text-sm font-semibold text-stone-400 mr-0.5">from</span> : null}
-            {priceDisplay}
+            {variantCount > 1 && <span className="text-sm font-semibold text-stone-400 mr-0.5">from</span>}
+            ${price.toFixed(2)}
           </span>
         </div>
 
-        {/* Size / Options | Department */}
         <p className="text-xs text-stone-400 leading-none">
           {variantCount > 1 ? `${variantCount} Options` : (product.Size || product.Department)}
           {variantCount === 1 && product.Size && product.Department && (
@@ -125,14 +133,12 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
           )}
         </p>
 
-        {/* Product name */}
         <Link href={`/shop/${encodeURIComponent(product.ItemUPC)}`}>
           <h3 className="text-sm font-semibold text-stone-800 leading-snug line-clamp-2 group-hover:text-crimson transition-colors min-h-[2.5rem]">
             {product.ItemName}
           </h3>
         </Link>
 
-        {/* Add to Cart button */}
         <button
           disabled={!inStock}
           onClick={(e) => { e.preventDefault(); dispatch({ type: "ADD", product }); }}
