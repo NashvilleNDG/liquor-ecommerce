@@ -198,12 +198,12 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
                 className={`px-4 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
                   tab === t.id
                     ? "border-stone-900 text-stone-900"
-                    : "border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300"
+                    : "border-transparent text-stone-800 hover:text-stone-900 hover:border-stone-300"
                 }`}
               >
                 {t.label}
                 <span className={`ml-2 text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                  tab === t.id ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-500"
+                  tab === t.id ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-800"
                 }`}>{count.toLocaleString()}</span>
               </button>
             );
@@ -277,7 +277,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
       </div>
 
       {/* ── Table header ── */}
-      <div className="grid grid-cols-[32px_80px_1fr_120px_100px_110px_80px] items-center gap-4 px-4 py-2 bg-stone-50 border border-stone-200 rounded-t-xl text-xs font-semibold text-stone-500 uppercase tracking-wide">
+      <div className="grid grid-cols-[32px_80px_1fr_120px_100px_110px_80px] items-center gap-4 px-4 py-2 bg-stone-50 border border-stone-200 rounded-t-xl text-xs font-semibold text-stone-800 uppercase tracking-wide">
         <input
           type="checkbox"
           checked={allOnPageSelected}
@@ -303,7 +303,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
       {/* ── Rows ── */}
       <div className="border-x border-b border-stone-200 rounded-b-xl overflow-hidden divide-y divide-stone-100">
         {paginated.length === 0 ? (
-          <div className="py-20 text-center text-stone-400 text-sm">No products match your filters.</div>
+          <div className="py-20 text-center text-stone-700 text-sm">No products match your filters.</div>
         ) : paginated.map((p) => {
           const ov       = overrides[p.ItemUPC];
           const stock    = Number(p.CurrentStock);
@@ -376,9 +376,9 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
                     ["Pack",   p.Pack      || "—"],
                     ["UPC",    p.ItemUPC],
                   ].map(([label, val]) => (
-                    <p key={label} className="text-xs text-stone-400">
-                      <span className="text-stone-400">{label} </span>
-                      <span className={`font-medium text-stone-600 ${label === "UPC" ? "font-mono" : ""}`}>{val}</span>
+                    <p key={label} className="text-xs text-stone-600">
+                      <span className="text-stone-600">{label} </span>
+                      <span className={`font-medium text-stone-900 ${label === "UPC" ? "font-mono" : ""}`}>{val}</span>
                     </p>
                   ))}
                 </div>
@@ -387,7 +387,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
               {/* Department */}
               <div>
                 <p className="text-sm font-medium text-stone-700">{DEPT_LABEL[p.Department] ?? p.Department}</p>
-                <p className="text-xs text-stone-400 mt-0.5">{emoji}</p>
+                <p className="text-xs text-stone-600 mt-0.5">{emoji}</p>
               </div>
 
               {/* Price */}
@@ -396,7 +396,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
                   ${displayPrice.toFixed(2)}
                 </p>
                 {ov?.onlinePrice && (
-                  <p className="text-[11px] text-stone-400 line-through">${Number(p.OnlinePrice).toFixed(2)}</p>
+                  <p className="text-[11px] text-stone-600 line-through">${Number(p.OnlinePrice).toFixed(2)}</p>
                 )}
               </div>
 
@@ -405,7 +405,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
                 <p className={`text-base font-bold ${!inStock ? "text-red-500" : lowStock ? "text-amber-500" : "text-green-600"}`}>
                   {stock}
                 </p>
-                <p className="text-[11px] text-stone-400">
+                <p className="text-[11px] text-stone-700">
                   {!inStock ? "Out of stock" : lowStock ? "Low stock" : "In stock"}
                 </p>
               </div>
@@ -414,7 +414,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
               <div className="flex justify-end">
                 <Link
                   href={`/dashboard/products/${encodeURIComponent(p.ItemUPC)}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-stone-100 hover:bg-amber-50 hover:border-amber-300 border border-transparent hover:text-amber-700 text-stone-600 transition-all"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-stone-100 hover:bg-amber-50 hover:border-amber-300 border border-transparent hover:text-amber-700 text-stone-900 transition-all"
                 >
                   <Pencil size={12} /> Edit
                 </Link>
@@ -425,7 +425,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
       </div>
 
       {/* ── Pagination ── */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 text-sm text-stone-500">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 text-sm text-stone-900">
         <div className="flex items-center gap-2">
           <span>Results per page:</span>
           {PAGE_SIZES.map((s) => (
@@ -435,7 +435,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
               className={`w-9 h-8 rounded-lg text-xs font-semibold border transition-colors ${
                 pageSize === s
                   ? "bg-stone-900 text-white border-stone-900"
-                  : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
+                  : "bg-white text-stone-900 border-stone-200 hover:border-stone-400"
               }`}
             >
               {s}
@@ -447,14 +447,14 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
           <button
             onClick={() => goToPage(page - 1)}
             disabled={page === 1}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-50 disabled:opacity-30 transition-colors text-xs font-semibold"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-stone-200 text-stone-900 hover:bg-stone-50 disabled:opacity-30 transition-colors text-xs font-semibold"
           >
             <ChevronLeft size={14} /> Prev
           </button>
 
           {pageNums.map((n, i) =>
             n === "…" ? (
-              <span key={`ellipsis-${i}`} className="px-1 text-stone-300">…</span>
+              <span key={`ellipsis-${i}`} className="px-1 text-stone-600">…</span>
             ) : (
               <button
                 key={n}
@@ -462,7 +462,7 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
                 className={`w-8 h-8 rounded-lg text-xs font-bold border transition-colors ${
                   page === n
                     ? "bg-stone-900 text-white border-stone-900"
-                    : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
+                    : "bg-white text-stone-900 border-stone-200 hover:border-stone-400"
                 }`}
               >
                 {n}
@@ -473,13 +473,13 @@ export default function ProductTable({ products, initialOverrides, imageCache = 
           <button
             onClick={() => goToPage(page + 1)}
             disabled={page === totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-50 disabled:opacity-30 transition-colors text-xs font-semibold"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-stone-200 text-stone-900 hover:bg-stone-50 disabled:opacity-30 transition-colors text-xs font-semibold"
           >
             Next <ChevronRight size={14} />
           </button>
         </div>
 
-        <p className="text-xs text-stone-400 tabular-nums">
+        <p className="text-xs text-stone-700 tabular-nums">
           {((page - 1) * pageSize + 1).toLocaleString()}–{Math.min(page * pageSize, filtered.length).toLocaleString()} of {filtered.length.toLocaleString()}
         </p>
       </div>

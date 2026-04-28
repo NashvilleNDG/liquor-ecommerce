@@ -48,7 +48,7 @@ function Section({ title, children, hint }: { title: string; children: React.Rea
     <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
       <div className="px-6 py-4 border-b border-stone-100 flex items-center gap-2">
         <h2 className="font-bold text-stone-900 text-sm">{title}</h2>
-        {hint && <span className="text-xs text-stone-400">{hint}</span>}
+        {hint && <span className="text-xs text-stone-600">{hint}</span>}
       </div>
       <div className="px-6 py-5">{children}</div>
     </div>
@@ -84,7 +84,7 @@ function TagInput({
             </button>
           </span>
         ))}
-        {tags.length === 0 && <span className="text-xs text-stone-400 italic">No tags added</span>}
+        {tags.length === 0 && <span className="text-xs text-stone-600 italic">No tags added</span>}
       </div>
       <div className="flex gap-2">
         <input
@@ -104,7 +104,7 @@ function TagInput({
             <button
               key={p}
               onClick={() => onAdd(p)}
-              className="text-[11px] font-medium text-stone-500 hover:text-stone-900 border border-stone-200 hover:border-stone-400 bg-white px-2 py-0.5 rounded-full transition-all"
+              className="text-[11px] font-medium text-stone-700 hover:text-stone-900 border border-stone-200 hover:border-stone-400 bg-white px-2 py-0.5 rounded-full transition-all"
             >
               + {p}
             </button>
@@ -248,7 +248,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
         <div className="max-w-screen-xl mx-auto flex items-center gap-4">
           <Link
             href="/dashboard/inventory"
-            className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-900 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-stone-800 hover:text-stone-900 transition-colors"
           >
             <ArrowLeft size={16} /> Products
           </Link>
@@ -265,7 +265,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
             <Link
               href={`/shop/${encodeURIComponent(product.ItemUPC)}`}
               target="_blank"
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 border border-stone-200 rounded-lg text-stone-600 hover:bg-stone-50 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 border border-stone-200 rounded-lg text-stone-900 hover:bg-stone-50 transition-colors"
             >
               <ExternalLink size={13} /> View in Shop
             </Link>
@@ -308,7 +308,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                 ) : (
                   <div className="flex flex-col items-center gap-2 opacity-30">
                     <span className="text-6xl">{DEPT_EMOJI[product.Department] ?? "🍾"}</span>
-                    <p className="text-xs text-stone-500">No image yet</p>
+                    <p className="text-xs text-stone-700">No image yet</p>
                   </div>
                 )}
                 {imageUrl && (
@@ -321,7 +321,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                 )}
               </div>
 
-              <p className="text-[11px] text-stone-400 mb-2">⚠ Use images without backgrounds or trademarks for best quality</p>
+              <p className="text-[11px] text-stone-600 mb-2">⚠ Use images without backgrounds or trademarks for best quality</p>
 
               <div className="space-y-2">
                 <input
@@ -337,7 +337,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="w-full flex items-center justify-center gap-2 border border-stone-200 rounded-lg py-2 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 border border-stone-200 rounded-lg py-2 text-xs font-semibold text-stone-900 hover:bg-stone-50 transition-colors"
                 >
                   <Upload size={13} /> {uploading ? "Uploading…" : "Upload from computer"}
                 </button>
@@ -362,8 +362,8 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                 <div className="aspect-square bg-white border-2 border-dashed border-stone-200 rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors"
                   onClick={() => document.getElementById("addlUrlInput")?.focus()}
                 >
-                  <Plus size={18} className="text-stone-400" />
-                  <span className="text-[10px] text-stone-400">Add</span>
+                  <Plus size={18} className="text-stone-600" />
+                  <span className="text-[10px] text-stone-600">Add</span>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -390,8 +390,8 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
             <Section title="Product Name" hint="Website only — does not update POS">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-600 mb-1.5">
-                    Display Name <span className="text-stone-400 font-normal">(leave blank to use POS name)</span>
+                  <label className="block text-xs font-semibold text-stone-900 mb-1.5">
+                    Display Name <span className="text-stone-600 font-normal">(leave blank to use POS name)</span>
                   </label>
                   <input
                     value={websiteName}
@@ -401,7 +401,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-stone-600 mb-1.5">Subtitle / Tagline</label>
+                  <label className="block text-xs font-semibold text-stone-900 mb-1.5">Subtitle / Tagline</label>
                   <input
                     value={subtitle}
                     onChange={(e) => setSubtitle(e.target.value)}
@@ -421,14 +421,14 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                 rows={5}
                 className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-50 resize-none leading-relaxed"
               />
-              <p className="text-[11px] text-stone-400 mt-1.5">{description.length} characters</p>
+              <p className="text-[11px] text-stone-600 mt-1.5">{description.length} characters</p>
             </Section>
 
             {/* Types + Sub Types */}
             <Section title="Types & Sub Types" hint="Help customers find this product">
               <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-600 mb-2">Types</label>
+                  <label className="block text-xs font-semibold text-stone-900 mb-2">Types</label>
                   <TagInput
                     tags={types}
                     onAdd={(t) => setTypes((p) => [...p, t])}
@@ -438,7 +438,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                   />
                 </div>
                 <div className="border-t border-stone-100 pt-5">
-                  <label className="block text-xs font-semibold text-stone-600 mb-2">Sub Types</label>
+                  <label className="block text-xs font-semibold text-stone-900 mb-2">Sub Types</label>
                   <TagInput
                     tags={subTypes}
                     onAdd={(t) => setSubTypes((p) => [...p, t])}
@@ -460,7 +460,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                   { label: "Varietal", val: varietal, set: setVarietal },
                 ].map(({ label, val, set }) => (
                   <div key={label}>
-                    <label className="block text-xs font-semibold text-stone-600 mb-1.5">{label}</label>
+                    <label className="block text-xs font-semibold text-stone-900 mb-1.5">{label}</label>
                     <input
                       value={val}
                       onChange={(e) => set(e.target.value)}
@@ -478,7 +478,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
         <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-stone-100">
             <h2 className="font-bold text-stone-900 text-sm">Stock Actions</h2>
-            <p className="text-xs text-stone-400 mt-0.5">Pricing and merchandising controls — website only</p>
+            <p className="text-xs text-stone-700 mt-0.5">Pricing and merchandising controls — website only</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-stone-100">
 
@@ -487,14 +487,14 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
               <label className="flex items-center gap-1.5 text-xs font-semibold text-stone-700 mb-3">
                 <DollarSign size={13} /> Website Price
               </label>
-              <p className="text-[11px] text-stone-400 mb-2">
+              <p className="text-[11px] text-stone-700 mb-2">
                 POS: <strong>${posPrice.toFixed(2)}</strong>
                 {Number(product.OnlinePrice) !== posPrice && (
                   <> · Kanji: <strong>${Number(product.OnlinePrice).toFixed(2)}</strong></>
                 )}
               </p>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-700 text-sm">$</span>
                 <input
                   type="number" step="0.01" min="0"
                   value={onlinePrice}
@@ -516,19 +516,19 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
               <div className="flex gap-2 mb-2">
                 <button
                   onClick={() => setDiscountType("percent")}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${discountType === "percent" ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-600 border-stone-200"}`}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${discountType === "percent" ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-900 border-stone-200"}`}
                 >
                   % Off
                 </button>
                 <button
                   onClick={() => setDiscountType("fixed")}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${discountType === "fixed" ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-600 border-stone-200"}`}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${discountType === "fixed" ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-900 border-stone-200"}`}
                 >
                   $ Off
                 </button>
               </div>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-700 text-sm">
                   {discountType === "percent" ? "%" : "$"}
                 </span>
                 <input
@@ -541,7 +541,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
               </div>
               {hasDiscount && (
                 <div className="mt-1.5 space-y-0.5">
-                  <p className="text-xs text-stone-400 line-through">${basePrice.toFixed(2)}</p>
+                  <p className="text-xs text-stone-600 line-through">${basePrice.toFixed(2)}</p>
                   <p className="text-xs text-green-600 font-bold">Sale: ${finalPrice.toFixed(2)}</p>
                 </div>
               )}
@@ -577,7 +577,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                 type="button"
                 onClick={() => setFeatured(!featured)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors text-sm font-semibold ${
-                  featured ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-stone-50 border-stone-200 text-stone-500"
+                  featured ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-stone-50 border-stone-200 text-stone-800"
                 }`}
               >
                 <span className="flex items-center gap-2"><Star size={14} /> {featured ? "Featured" : "Not featured"}</span>
@@ -591,7 +591,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                 type="button"
                 onClick={() => setHidden(!hidden)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors text-sm font-semibold ${
-                  hidden ? "bg-red-50 border-red-300 text-red-700" : "bg-stone-50 border-stone-200 text-stone-500"
+                  hidden ? "bg-red-50 border-red-300 text-red-700" : "bg-stone-50 border-stone-200 text-stone-800"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -611,12 +611,12 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
         <div className="bg-white rounded-2xl border border-stone-200 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex-1">
             <p className="text-xs font-semibold text-stone-700 mb-1">Product URL</p>
-            <p className="text-sm text-stone-500 font-mono break-all">{productUrl}</p>
+            <p className="text-sm text-stone-900 font-mono break-all">{productUrl}</p>
           </div>
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={copyUrl}
-              className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 border border-stone-200 rounded-lg text-stone-600 hover:bg-stone-50 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 border border-stone-200 rounded-lg text-stone-900 hover:bg-stone-50 transition-colors"
             >
               {copied ? <><Check size={13} className="text-green-500" /> Copied!</> : <><Copy size={13} /> Copy URL</>}
             </button>
