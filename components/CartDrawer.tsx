@@ -229,13 +229,13 @@ export default function CartDrawer() {
               <div className="flex justify-between text-stone-500">
                 <span>Delivery</span>
                 <span className={subtotal >= FREE_SHIP_THRESHOLD ? "text-green-600 font-medium" : ""}>
-                  {subtotal >= FREE_SHIP_THRESHOLD ? "Free" : "$9.99"}
+                  {subtotal >= FREE_SHIP_THRESHOLD ? "Free" : "From $4.99"}
                 </span>
               </div>
               <div className="flex justify-between text-stone-900 font-bold text-base pt-2 border-t border-stone-100">
                 <span>Estimated Total</span>
                 <span className="text-crimson">
-                  ${(discountedTotal + (subtotal >= FREE_SHIP_THRESHOLD ? 0 : 9.99)).toFixed(2)}
+                  ${(discountedTotal + (subtotal >= FREE_SHIP_THRESHOLD ? 0 : 4.99)).toFixed(2)}
                 </span>
               </div>
             </div>

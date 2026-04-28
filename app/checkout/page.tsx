@@ -18,6 +18,8 @@ type DeliveryMode = "delivery" | "pickup";
 interface DeliverySettings {
   enabled: boolean;
   fee: number;
+  baseFee?: number;
+  perMileFee?: number;
   freeThreshold: number;
   estimatedTime: string;
   maxDistance: number;
