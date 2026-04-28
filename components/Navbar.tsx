@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -199,8 +199,8 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(136);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -214,22 +214,31 @@ export default function Navbar() {
   }, [userMenuOpen]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(prev => {
+        if (!prev && y > 80) return true;   // collapse: cross 80px going down
+        if (prev && y < 40) return false;   // expand: cross 40px going up
+        return prev;                        // no change — prevents rapid toggling
+      });
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    if (!headerRef.current) return;
-    let rafId: number;
-    const ro = new ResizeObserver(() => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        if (headerRef.current) setHeaderHeight(headerRef.current.offsetHeight);
-      });
-    });
+  useLayoutEffect(() => {
+    if (!headerRef.current || !navRef.current) return;
+    // Set nav top directly on every resize — bypasses React state, no re-renders,
+    // perfectly tracks header height every animation frame
+    const syncNavTop = () => {
+      if (headerRef.current && navRef.current) {
+        navRef.current.style.top = `${headerRef.current.offsetHeight}px`;
+      }
+    };
+    syncNavTop();
+    const ro = new ResizeObserver(syncNavTop);
     ro.observe(headerRef.current);
-    return () => { ro.disconnect(); cancelAnimationFrame(rafId); };
+    return () => ro.disconnect();
   }, []);
 
   return (
@@ -356,7 +365,7 @@ export default function Navbar() {
       </div>
 
       {/* ── Mega nav bar (desktop) — sticks directly below header ── */}
-      <nav className="hidden lg:block bg-white border-b border-stone-200 sticky z-30 shadow-sm" style={{ top: headerHeight, transition: "top 300ms ease-in-out" }}>
+      <nav ref={navRef} className="hidden lg:block bg-white border-b border-stone-200 sticky z-30 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center justify-center">
           <NavItem label="Home" href="/" />
           <NavItem label="Shop All" menu={SHOP_ALL_MENU} />
