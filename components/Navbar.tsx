@@ -352,7 +352,7 @@ export default function Navbar() {
       </div>
 
       {/* ── Mega nav bar (desktop) — sticks directly below header ── */}
-      <nav className="hidden lg:block bg-white border-b border-stone-200 sticky z-30 shadow-sm" style={{ top: headerHeight }}>
+      <nav className="hidden lg:block bg-white border-b border-stone-200 sticky z-30 shadow-sm" style={{ top: headerHeight, transition: "top 300ms ease-in-out" }}>
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center justify-center">
           <NavItem label="Home" href="/" />
           <NavItem label="Shop All" menu={SHOP_ALL_MENU} />
