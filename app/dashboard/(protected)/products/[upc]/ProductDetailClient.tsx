@@ -242,7 +242,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
   };
 
   return (
-    <div className="min-h-full bg-stone-50">
+    <div className="min-h-full bg-white">
 
       {/* ── Sticky header ── */}
       <div className="sticky top-0 z-20 bg-white border-b border-stone-200 px-4 sm:px-6 py-3">
