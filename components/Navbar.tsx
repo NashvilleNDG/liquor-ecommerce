@@ -198,6 +198,9 @@ export default function Navbar() {
   const { data: session } = useSession();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(136);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -210,10 +213,25 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, [userMenuOpen]);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      if (headerRef.current) setHeaderHeight(headerRef.current.offsetHeight);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <>
-      {/* ── Top contact bar ── */}
-      <div className="bg-white border-b border-stone-200 text-stone-700 text-xs">
+      {/* ── Top contact bar — hides on scroll ── */}
+      <div className={`bg-white border-b border-stone-200 text-stone-700 text-xs overflow-hidden transition-all duration-300 ${scrolled ? "max-h-0 opacity-0" : "max-h-16 opacity-100"}`}>
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
           <a href="tel:6158951888" className="flex items-center gap-1.5 hover:text-crimson transition-colors font-bold">
             <Phone size={12} /> (615) 895-1888
@@ -228,9 +246,9 @@ export default function Navbar() {
       </div>
 
       {/* ── Main header ── */}
-      <div className="bg-black sticky top-0 z-40 shadow-xl">
+      <div ref={headerRef} className="bg-black sticky top-0 z-40 shadow-xl">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-3 items-center py-3 gap-4">
+          <div className={`grid grid-cols-3 items-center gap-4 transition-all duration-300 ${scrolled ? "py-1" : "py-3"}`}>
 
             {/* LEFT: Mobile hamburger */}
             <div className="flex items-center gap-3">
@@ -243,7 +261,7 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* CENTER: Logo */}
+            {/* CENTER: Logo — shrinks on scroll */}
             <div className="flex justify-center">
               <Link href="/">
                 <Image
@@ -251,13 +269,17 @@ export default function Navbar() {
                   alt="Stones River Total Beverages"
                   width={192}
                   height={192}
-                  className="h-[134px] w-[134px] sm:h-[173px] sm:w-[173px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-200"
+                  className={`object-contain drop-shadow-2xl hover:scale-105 transition-all duration-300 ${
+                    scrolled
+                      ? "h-[56px] w-[56px] sm:h-[64px] sm:w-[64px]"
+                      : "h-[134px] w-[134px] sm:h-[173px] sm:w-[173px]"
+                  }`}
                   priority
                 />
               </Link>
             </div>
 
-            {/* RIGHT: Account + Cart + Search */}
+            {/* RIGHT: Account + Cart + Search — shrink on scroll */}
             <div className="flex flex-col items-end gap-2">
               {/* Icons row */}
               <div className="flex items-center gap-2">
@@ -295,7 +317,9 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <Link href="/login" className="flex items-center gap-2 text-white hover:text-stone-300 transition-colors">
-                    <span className="hidden sm:block text-sm font-bold">Login/Sign Up</span>
+                    <span className={`hidden sm:block text-sm font-bold overflow-hidden whitespace-nowrap transition-all duration-300 ${scrolled ? "max-w-0 opacity-0" : "max-w-xs opacity-100"}`}>
+                      Login/Sign Up
+                    </span>
                     <div className="w-11 h-11 rounded-full bg-stone-700 hover:bg-crimson flex items-center justify-center transition-colors">
                       <User size={19} />
                     </div>
@@ -317,8 +341,8 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Search bar */}
-              <div className="hidden sm:block w-40 md:w-52 lg:w-64">
+              {/* Search bar — shrinks on scroll */}
+              <div className={`hidden sm:block transition-all duration-300 ${scrolled ? "w-28 md:w-36 lg:w-48" : "w-40 md:w-52 lg:w-64"}`}>
                 <SearchAutocomplete placeholder="Search..." compact />
               </div>
             </div>
@@ -327,8 +351,8 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ── Mega nav bar (desktop) ── */}
-      <nav className="hidden lg:block bg-white border-b border-stone-200 sticky top-[136px] z-30 shadow-sm">
+      {/* ── Mega nav bar (desktop) — sticks directly below header ── */}
+      <nav className="hidden lg:block bg-white border-b border-stone-200 sticky z-30 shadow-sm" style={{ top: headerHeight }}>
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex items-center justify-center">
           <NavItem label="Home" href="/" />
           <NavItem label="Shop All" menu={SHOP_ALL_MENU} />
