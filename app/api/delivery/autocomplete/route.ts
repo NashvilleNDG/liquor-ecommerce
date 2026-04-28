@@ -1,44 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
-const SETTINGS_FILE = path.join(process.cwd(), "data", "settings.json");
-
-// Load store coords for biasing results toward the local area
-function getStoreBias(): string {
-  try {
-    const s = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf8"));
-    // Default to Murfreesboro, TN center if not set
-    return s.lat && s.lon ? `${s.lat},${s.lon}` : "35.8503,-86.4301";
-  } catch {
-    return "35.8503,-86.4301";
-  }
-}
+const KEY = process.env.GOOGLE_MAPS_API_KEY ?? "";
 
 // GET /api/delivery/autocomplete?q=1023+old+lascassas
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
-  if (q.length < 3) return NextResponse.json({ addresses: [] });
-
-  const key = process.env.RADAR_API_KEY;
-  if (!key) return NextResponse.json({ addresses: [] });
+  if (q.length < 3 || !KEY) return NextResponse.json({ predictions: [] });
 
   try {
-    const near = getStoreBias();
-    const url  = `https://api.radar.io/v1/search/autocomplete?query=${encodeURIComponent(q)}&near=${near}&layers=address&limit=6&country=US`;
-    const res  = await fetch(url, { headers: { Authorization: key } });
+    const url = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
+    url.searchParams.set("input", q);
+    url.searchParams.set("types", "address");
+    url.searchParams.set("components", "country:us");
+    url.searchParams.set("location", "35.8503,-86.4301"); // bias to Murfreesboro
+    url.searchParams.set("radius", "40000");              // 25-mile bias radius
+    url.searchParams.set("key", KEY);
+
+    const res  = await fetch(url.toString());
     const data = await res.json();
 
-    const addresses = (data.addresses ?? []).map((a: Record<string, string>) => ({
-      display:    a.formattedAddress ?? "",
-      street:     `${a.number ?? ""} ${a.street ?? ""}`.trim(),
-      city:       a.city ?? "",
-      state:      a.stateCode ?? a.state ?? "",
-      zip:        a.postalCode ?? "",
+    const predictions = (data.predictions ?? []).map((p: Record<string, string>) => ({
+      display:  p.description,
+      place_id: p.place_id,
     }));
 
-    return NextResponse.json({ addresses });
+    return NextResponse.json({ predictions });
   } catch {
-    return NextResponse.json({ addresses: [] });
+    return NextResponse.json({ predictions: [] });
   }
 }

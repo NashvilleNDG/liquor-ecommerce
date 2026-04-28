@@ -109,22 +109,23 @@ export default function CheckoutPage() {
   const [ageConfirmed,  setAgeConfirmed]  = useState(false);
 
   // Address autocomplete
-  const [suggestions,     setSuggestions]     = useState<{ display: string; street: string; city: string; state: string; zip: string }[]>([]);
+  const [predictions,     setPredictions]     = useState<{ display: string; place_id: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [placeLoading,    setPlaceLoading]    = useState(false);
   const suggestRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (mode !== "delivery") return;
     const q = form.address.trim();
-    if (q.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
+    if (q.length < 3) { setPredictions([]); setShowSuggestions(false); return; }
     const t = setTimeout(async () => {
       try {
         const res  = await fetch(`/api/delivery/autocomplete?q=${encodeURIComponent(q)}`);
         const data = await res.json();
-        const parsed = (data.addresses ?? []) as { display: string; street: string; city: string; state: string; zip: string }[];
-        setSuggestions(parsed);
-        setShowSuggestions(parsed.length > 0);
-      } catch { setSuggestions([]); }
+        const preds = (data.predictions ?? []) as { display: string; place_id: string }[];
+        setPredictions(preds);
+        setShowSuggestions(preds.length > 0);
+      } catch { setPredictions([]); }
     }, 300);
     return () => clearTimeout(t);
   }, [form.address, mode]);
@@ -139,9 +140,21 @@ export default function CheckoutPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  function selectSuggestion(s: { street: string; city: string; state: string; zip: string }) {
-    setForm(f => ({ ...f, address: s.street, city: s.city, state: s.state, zip: s.zip }));
+  async function selectPrediction(p: { display: string; place_id: string }) {
     setShowSuggestions(false);
+    // Optimistically fill street from display text
+    const streetPart = p.display.split(",")[0].trim();
+    setForm(f => ({ ...f, address: streetPart }));
+    // Fetch full address components
+    setPlaceLoading(true);
+    try {
+      const res  = await fetch(`/api/delivery/place?id=${p.place_id}`);
+      const data = await res.json();
+      if (data.street) {
+        setForm(f => ({ ...f, address: data.street, city: data.city, state: data.state, zip: data.zip }));
+      }
+    } catch { /* keep optimistic fill */ }
+    setPlaceLoading(false);
   }
 
   // Distance-based delivery fee
@@ -415,19 +428,24 @@ export default function CheckoutPage() {
                           />
                         </div>
                       </div>
-                      {showSuggestions && suggestions.length > 0 && (
+                      {showSuggestions && predictions.length > 0 && (
                         <ul className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden">
-                          {suggestions.map((s, i) => (
+                          {predictions.map((p, i) => (
                             <li
                               key={i}
-                              onMouseDown={() => selectSuggestion(s)}
+                              onMouseDown={() => selectPrediction(p)}
                               className="px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-0 flex items-start gap-2"
                             >
                               <MapPin size={12} className="mt-0.5 shrink-0 text-stone-400" />
-                              <span>{s.display}</span>
+                              <span>{p.display}</span>
                             </li>
                           ))}
                         </ul>
+                      )}
+                      {placeLoading && (
+                        <p className="text-[11px] text-stone-400 mt-1 pl-1 flex items-center gap-1">
+                          <Loader2 size={10} className="animate-spin" /> Filling address…
+                        </p>
                       )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
