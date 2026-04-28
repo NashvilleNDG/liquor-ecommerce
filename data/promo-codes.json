@@ -1,0 +1,28 @@
+[
+  {
+    "id": "c9568985-d41e-4f25-bceb-e5ecf0ed2308",
+    "code": "SRTB10",
+    "type": "percent",
+    "value": 10,
+    "minOrder": 0,
+    "maxUses": null,
+    "usedCount": 1,
+    "active": true,
+    "expiresAt": null,
+    "createdAt": "2026-04-28T01:08:48.363Z",
+    "description": "10% off any order"
+  },
+  {
+    "id": "13c03a65-568a-474e-add0-ccfa5f2ec641",
+    "code": "SAVE20",
+    "type": "percent",
+    "value": 20,
+    "minOrder": 0,
+    "maxUses": null,
+    "usedCount": 0,
+    "active": true,
+    "expiresAt": null,
+    "createdAt": "2026-04-28T01:09:13.297Z",
+    "description": ""
+  }
+]

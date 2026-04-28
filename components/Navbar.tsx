@@ -420,9 +420,9 @@ export default function Navbar() {
                 { label: "On Sale",           href: "/shop?sort=price_asc&max=30" },
                 { label: "Tasting & Events",  href: "/events" },
                 { label: "New Arrivals",      href: "/shop?sort=name" },
+                { label: "Best Sellers",      href: "/shop?sort=stock_desc" },
                 { label: "Under $20",         href: "/shop?max=20" },
-                { label: "CBD & Mixers",      href: "/shop?dept=CBD" },
-                { label: "Cigars",            href: "/shop?dept=CIGARS" },
+                { label: "Mixers",            href: "/shop?dept=MIXERS" },
               ].map(({ label, href }) => (
                 <Link
                   key={label}

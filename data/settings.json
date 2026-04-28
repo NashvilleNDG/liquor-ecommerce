@@ -1,0 +1,20 @@
+{
+  "storeName": "Stones River Beer Wine & Spirits",
+  "tagline": "Your local beverage destination",
+  "phone": "(615) 895-1888",
+  "email": "stonesrivertotalbeverage@gmail.com",
+  "address": "208 North Thompson Lane",
+  "city": "Murfreesboro",
+  "state": "TN",
+  "zip": "37129",
+  "taxRate": 9.75,
+  "minOrderAmount": 25,
+  "ageVerification": true,
+  "hoursMonFri": "9:00 AM – 10:00 PM",
+  "hoursSat": "9:00 AM – 11:00 PM",
+  "hoursSun": "12:00 PM – 8:00 PM",
+  "currency": "USD",
+  "timezone": "America/Chicago",
+  "facebookUrl": "",
+  "instagramUrl": ""
+}

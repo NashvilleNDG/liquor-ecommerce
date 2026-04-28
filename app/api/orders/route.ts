@@ -9,6 +9,7 @@ export interface AdminOrder {
   date: string;
   customer: string;
   email?: string;
+  phone?: string;
   items: { name: string; qty: number; price: number }[];
   subtotal: number;
   discount: number;
@@ -20,6 +21,13 @@ export interface AdminOrder {
   promoCode?: string;
   status: "pending" | "processing" | "out_for_delivery" | "delivered" | "cancelled";
   notes?: string;
+  thirdPartyDelivery?: {
+    provider: "doordash" | "uber";
+    deliveryId: string;
+    status: string;
+    trackingUrl?: string;
+    dispatchedAt: string;
+  };
 }
 
 function loadOrders(): AdminOrder[] {

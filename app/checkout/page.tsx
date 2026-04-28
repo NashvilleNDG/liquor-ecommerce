@@ -107,6 +107,11 @@ export default function CheckoutPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Distance-based delivery fee
+  const [deliveryQuote, setDeliveryQuote] = useState<{ fee: number; miles: number } | null>(null);
+  const [quoteLoading,  setQuoteLoading]  = useState(false);
+  const [quoteError,    setQuoteError]    = useState("");
+
   // Promo code state
   const [promoInput,    setPromoInput]    = useState("");
   const [appliedCode,   setAppliedCode]   = useState<string | null>(null);
@@ -120,9 +125,41 @@ export default function CheckoutPage() {
   const taxRate      = (store.taxRate ?? 9.75) / 100;
   const tax          = subtotal * taxRate;
   const isFreeShip   = delivery.freeThreshold > 0 && subtotal >= delivery.freeThreshold;
-  const deliveryFee  = isFreeShip || mode === "pickup" ? 0 : delivery.fee;
+  const baseDeliveryFee = deliveryQuote?.fee ?? (delivery.baseFee ?? delivery.fee);
+  const deliveryFee  = isFreeShip || mode === "pickup" ? 0 : baseDeliveryFee;
   const discount     = appliedCode ? appliedDiscount : 0;
   const orderTotal   = Math.max(0, subtotal - discount + tax + deliveryFee);
+
+  // Fetch distance-based delivery quote whenever address is complete
+  useEffect(() => {
+    if (mode !== "delivery") return;
+    const { address, city, state, zip } = form;
+    if (!address.trim() || !city.trim() || !zip.trim()) {
+      setDeliveryQuote(null);
+      setQuoteError("");
+      return;
+    }
+    const full = `${address}, ${city}, ${state || "TN"} ${zip}`;
+    setQuoteLoading(true);
+    setQuoteError("");
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/delivery/quote?address=${encodeURIComponent(full)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setQuoteError(data.error ?? "Could not calculate delivery fee");
+          setDeliveryQuote(null);
+        } else {
+          setDeliveryQuote({ fee: data.fee, miles: data.miles });
+          setQuoteError("");
+        }
+      } catch {
+        setQuoteError("Could not calculate delivery fee");
+      }
+      setQuoteLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [form.address, form.city, form.state, form.zip, mode]);
 
   function set(field: keyof typeof form) {
     return (v: string) => setForm((f) => ({ ...f, [field]: v }));
@@ -277,8 +314,8 @@ export default function CheckoutPage() {
                       {
                         id: "delivery", label: "Home Delivery", icon: Truck,
                         desc: delivery.freeThreshold > 0
-                          ? `Free over $${delivery.freeThreshold}`
-                          : delivery.enabled ? `$${delivery.fee.toFixed(2)} fee` : "Unavailable",
+                          ? `$${(delivery.baseFee ?? 5).toFixed(2)} + $${(delivery.perMileFee ?? 0.50).toFixed(2)}/mi · Free over $${delivery.freeThreshold}`
+                          : delivery.enabled ? `$${(delivery.baseFee ?? 5).toFixed(2)} + $${(delivery.perMileFee ?? 0.50).toFixed(2)}/mi` : "Unavailable",
                       },
                       { id: "pickup", label: "Store Pickup",  icon: Store, desc: "Ready same day" },
                     ] as { id: DeliveryMode; label: string; icon: React.ElementType; desc: string }[]).map(({ id, label, icon: Icon, desc }) => (
@@ -451,17 +488,31 @@ export default function CheckoutPage() {
                       <span>{settingsLoaded ? `$${tax.toFixed(2)}` : "…"}</span>
                     </div>
                     <div className="flex justify-between text-stone-500">
-                      <span>Delivery</span>
+                      <span>
+                        Delivery
+                        {deliveryQuote && !isFreeShip && mode === "delivery" && (
+                          <span className="ml-1 text-[10px] text-stone-400">({deliveryQuote.miles} mi)</span>
+                        )}
+                      </span>
                       <span className={deliveryFee === 0 ? "text-green-600 font-medium" : ""}>
                         {mode === "pickup"
                           ? "Free (Pickup)"
                           : isFreeShip
                             ? "Free"
-                            : settingsLoaded
-                              ? `$${delivery.fee.toFixed(2)}`
-                              : "…"}
+                            : quoteLoading
+                              ? <span className="text-stone-400 text-xs">Calculating…</span>
+                              : quoteError
+                                ? <span className="text-red-500 text-xs">—</span>
+                                : deliveryQuote
+                                  ? `$${deliveryQuote.fee.toFixed(2)}`
+                                  : settingsLoaded
+                                    ? `From $${(delivery.baseFee ?? delivery.fee).toFixed(2)}`
+                                    : "…"}
                       </span>
                     </div>
+                    {quoteError && mode === "delivery" && (
+                      <p className="text-[10px] text-red-500">{quoteError}</p>
+                    )}
                     {mode === "delivery" && !isFreeShip && delivery.freeThreshold > 0 && (
                       <p className="text-[10px] text-stone-400">
                         Add ${(delivery.freeThreshold - subtotal).toFixed(2)} more for free delivery

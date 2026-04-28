@@ -1,0 +1,13 @@
+[
+  {
+    "id": "6a90340c-f13d-4029-b19e-5b4617e40ccb",
+    "title": "Weekend Whiskey Sale — 15% Off",
+    "subtitle": "Shop premium bourbons & scotch at special prices this weekend only",
+    "ctaText": "Shop Now",
+    "ctaLink": "/shop?dept=LIQUOR",
+    "bgColor": "from-red-900 to-stone-900",
+    "active": true,
+    "order": 0,
+    "createdAt": "2026-04-28T01:09:49.734Z"
+  }
+]

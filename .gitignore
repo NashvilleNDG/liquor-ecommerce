@@ -28,3 +28,10 @@ Thumbs.db
 # Claude Code internal files
 .claude/
 memory/
+
+# Data files with credentials or generated content
+data/delivery.json
+data/orders.json
+data/product-images-cache.json
+tsconfig.tsbuildinfo
+.devlog.txt
