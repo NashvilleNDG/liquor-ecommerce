@@ -206,7 +206,7 @@ export default function ProductEditPanel({ product, override, onClose, onSaved }
           {/* Hidden */}
           <section>
             <label className="flex items-center gap-1.5 text-xs font-semibold text-stone-700 mb-2">
-              <EyeOff size={13} /> Visibility
+              <EyeOff size={13} /> Hide from Website
             </label>
             <button
               type="button"
@@ -214,17 +214,20 @@ export default function ProductEditPanel({ product, override, onClose, onSaved }
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
                 hidden
                   ? "bg-red-50 border-red-300 text-red-700"
-                  : "bg-green-50 border-green-300 text-green-700"
+                  : "bg-stone-50 border-stone-200 text-stone-500"
               }`}
             >
               <span className="text-sm font-semibold flex items-center gap-2">
                 {hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                {hidden ? "Hidden from shop" : "Visible on shop"}
+                {hidden ? "Hidden — not visible to customers" : "Visible on shop (default)"}
               </span>
-              <div className={`w-9 h-5 rounded-full transition-colors relative flex-shrink-0 ${hidden ? "bg-red-400" : "bg-green-400"}`}>
+              <div className={`w-9 h-5 rounded-full transition-colors relative flex-shrink-0 ${hidden ? "bg-red-400" : "bg-stone-300"}`}>
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${hidden ? "left-4" : "left-0.5"}`} />
               </div>
             </button>
+            {hidden && (
+              <p className="text-xs text-red-500 mt-1.5">This product will not appear in the shop until you turn this off.</p>
+            )}
           </section>
 
           {/* Label */}
