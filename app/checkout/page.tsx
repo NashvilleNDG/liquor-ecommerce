@@ -116,30 +116,16 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (mode !== "delivery") return;
     const q = form.address.trim();
-    if (q.length < 4) { setSuggestions([]); setShowSuggestions(false); return; }
+    if (q.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ", Tennessee, US")}&format=json&limit=5&countrycodes=us&addressdetails=1`,
-          { headers: { "User-Agent": "StonesRiverBeverages/1.0" } }
-        );
+        const res  = await fetch(`/api/delivery/autocomplete?q=${encodeURIComponent(q)}`);
         const data = await res.json();
-        const parsed = (data as Record<string, unknown>[])
-          .filter((r) => (r.address as Record<string, string>)?.road)
-          .map((r) => {
-            const a = r.address as Record<string, string>;
-            return {
-              display: (r.display_name as string).split(",").slice(0, 4).join(",").trim(),
-              street:  `${a.house_number ?? ""} ${a.road ?? ""}`.trim(),
-              city:    a.city ?? a.town ?? a.village ?? "",
-              state:   a.state ?? "",
-              zip:     a.postcode ?? "",
-            };
-          });
+        const parsed = (data.addresses ?? []) as { display: string; street: string; city: string; state: string; zip: string }[];
         setSuggestions(parsed);
         setShowSuggestions(parsed.length > 0);
       } catch { setSuggestions([]); }
-    }, 350);
+    }, 300);
     return () => clearTimeout(t);
   }, [form.address, mode]);
 
