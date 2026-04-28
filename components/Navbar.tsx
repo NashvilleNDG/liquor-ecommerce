@@ -318,7 +318,7 @@ export default function Navbar() {
               </div>
 
               {/* Search bar */}
-              <div className="hidden sm:block w-64 md:w-80 lg:w-96">
+              <div className="hidden sm:block w-40 md:w-52 lg:w-64">
                 <SearchAutocomplete placeholder="Search..." compact />
               </div>
             </div>
