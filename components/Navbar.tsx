@@ -261,7 +261,7 @@ export default function Navbar() {
       {/* ── Main header ── */}
       <div ref={headerRef} className="bg-black sticky top-0 z-40 shadow-xl" style={{ willChange: "height" }}>
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
-          <div className={`grid grid-cols-3 items-center gap-4 [transition:padding_300ms_ease-in-out] ${scrolled ? "py-1" : "py-3"}`}>
+          <div className={`grid grid-cols-3 items-center gap-4 [transition:padding_600ms_ease-in-out] ${scrolled ? "py-1" : "py-3"}`}>
 
             {/* LEFT: Mobile hamburger */}
             <div className="flex items-center gap-3">
@@ -282,7 +282,7 @@ export default function Navbar() {
                   alt="Stones River Total Beverages"
                   width={192}
                   height={192}
-                  className={`object-contain drop-shadow-2xl [transition:width_300ms_ease-in-out,height_300ms_ease-in-out] ${
+                  className={`object-contain drop-shadow-2xl [transition:width_600ms_ease-in-out,height_600ms_ease-in-out] ${
                     scrolled
                       ? "h-[56px] w-[56px] sm:h-[64px] sm:w-[64px]"
                       : "h-[134px] w-[134px] sm:h-[173px] sm:w-[173px]"
@@ -330,7 +330,7 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <Link href="/login" className="flex items-center gap-2 text-white hover:text-stone-300 transition-colors">
-                    <span className={`hidden sm:block text-sm font-bold whitespace-nowrap [transition:opacity_250ms_ease-in-out,max-width_300ms_ease-in-out] overflow-hidden ${scrolled ? "max-w-0 opacity-0" : "max-w-[160px] opacity-100"}`}>
+                    <span className={`hidden sm:block text-sm font-bold whitespace-nowrap [transition:opacity_500ms_ease-in-out,max-width_600ms_ease-in-out] overflow-hidden ${scrolled ? "max-w-0 opacity-0" : "max-w-[160px] opacity-100"}`}>
                       Login/Sign Up
                     </span>
                     <div className="w-11 h-11 rounded-full bg-stone-700 hover:bg-crimson flex items-center justify-center transition-colors">
@@ -355,7 +355,7 @@ export default function Navbar() {
               </div>
 
               {/* Search bar — shrinks on scroll */}
-              <div className={`hidden sm:block [transition:width_300ms_ease-in-out] ${scrolled ? "w-28 md:w-36 lg:w-48" : "w-40 md:w-52 lg:w-64"}`}>
+              <div className={`hidden sm:block [transition:width_600ms_ease-in-out] ${scrolled ? "w-28 md:w-36 lg:w-48" : "w-40 md:w-52 lg:w-64"}`}>
                 <SearchAutocomplete placeholder="Search..." compact />
               </div>
             </div>
