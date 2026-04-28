@@ -163,9 +163,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
       : Math.max(0, basePrice - Number(discountVal))
     : basePrice;
 
-  const productUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/shop/${encodeURIComponent(product.ItemUPC)}`
-    : `/shop/${encodeURIComponent(product.ItemUPC)}`;
+  const productUrl = `/shop/${encodeURIComponent(product.ItemUPC)}`;
 
   const typePresets    = TYPE_PRESETS[product.Department]    ?? [];
   const subtypePresets = SUBTYPE_PRESETS[product.Department] ?? [];
@@ -231,7 +229,8 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
   }
 
   async function copyUrl() {
-    await navigator.clipboard.writeText(productUrl);
+    const full = `${window.location.origin}${productUrl}`;
+    await navigator.clipboard.writeText(full);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -303,7 +302,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
 
             {/* Primary image */}
             <Section title="Primary Image" hint="Shown everywhere">
-              <div className="aspect-square bg-stone-50 border border-stone-200 rounded-xl flex items-center justify-center overflow-hidden relative mb-4">
+              <div className="aspect-square bg-white border border-stone-200 rounded-xl flex items-center justify-center overflow-hidden relative mb-4">
                 {imageUrl ? (
                   <Image src={imageUrl} alt={product.ItemName} fill sizes="300px" className="object-contain p-4" unoptimized />
                 ) : (
@@ -349,7 +348,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
             <Section title="Additional Images" hint="Gallery photos">
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {addlImages.map((url, i) => (
-                  <div key={i} className="aspect-square bg-stone-100 rounded-lg relative overflow-hidden border border-stone-200">
+                  <div key={i} className="aspect-square bg-white rounded-lg relative overflow-hidden border border-stone-200">
                     <Image src={url} alt="" fill sizes="80px" className="object-contain p-1" unoptimized />
                     <button
                       onClick={() => setAddlImages((prev) => prev.filter((_, j) => j !== i))}
@@ -360,7 +359,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                   </div>
                 ))}
                 {/* Add slot */}
-                <div className="aspect-square bg-stone-50 border-2 border-dashed border-stone-200 rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors"
+                <div className="aspect-square bg-white border-2 border-dashed border-stone-200 rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors"
                   onClick={() => document.getElementById("addlUrlInput")?.focus()}
                 >
                   <Plus size={18} className="text-stone-400" />
