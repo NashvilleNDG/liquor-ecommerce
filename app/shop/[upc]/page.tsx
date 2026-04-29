@@ -1,7 +1,7 @@
 import { fetchProducts } from "@/lib/kanji-api";
 import { getVariants, deduplicateByVariant } from "@/lib/product-variants";
 import { loadImageCache, resolveProductImage } from "@/lib/image-cache";
-import { readOverrides } from "@/lib/product-overrides";
+import { readOverrides, resolvePrice } from "@/lib/product-overrides";
 import { notFound } from "next/navigation";
 import ProductDetail from "./ProductDetail";
 
@@ -31,8 +31,9 @@ export default async function ProductPage({ params }: { params: Promise<{ upc: s
     Promise.resolve(readOverrides()),
   ]);
 
-  const override  = overrides[upc] ?? {};
-  const imageUrl  = resolveProductImage(upc, override.imageUrl, imageCache);
+  const override      = overrides[upc] ?? {};
+  const imageUrl      = resolveProductImage(upc, override.imageUrl, imageCache);
+  const effectivePrice = resolvePrice(Number(product.Price), override);
 
   return (
     <ProductDetail
@@ -43,6 +44,7 @@ export default async function ProductPage({ params }: { params: Promise<{ upc: s
       imageUrl={imageUrl}
       overrideDescription={override.description ?? null}
       overrideName={override.websiteName ?? null}
+      overridePrice={effectivePrice !== Number(product.Price) ? effectivePrice : null}
     />
   );
 }

@@ -143,6 +143,7 @@ export default function ProductDetail({
   imageUrl,
   overrideDescription,
   overrideName,
+  overridePrice,
 }: {
   product: Product;
   variants: Product[];
@@ -151,6 +152,7 @@ export default function ProductDetail({
   imageUrl?: string | null;
   overrideDescription?: string | null;
   overrideName?: string | null;
+  overridePrice?: number | null;
 }) {
   const { dispatch } = useCart();
   const { dispatch: wDispatch, isWishlisted } = useWishlist();
@@ -173,6 +175,8 @@ export default function ProductDetail({
   const wishlisted = isWishlisted(product.ItemUPC);
   const inStock = Number(product.CurrentStock) > 0;
   const maxQty = Math.min(Number(product.CurrentStock) || 99, 99);
+  const displayPrice = overridePrice ?? Number(product.Price);
+  const productWithPrice = overridePrice ? { ...product, Price: overridePrice } : product;
 
   // All size variants sorted by price
   const allSizes = [product, ...variants].sort((a, b) => Number(a.Price) - Number(b.Price));
@@ -368,7 +372,7 @@ export default function ProductDetail({
           {/* Size + Price header */}
           <div className="flex items-end justify-between pb-4 border-b border-stone-200 dark:border-stone-800">
             <span className="text-2xl font-bold text-crimson">{product.Size}</span>
-            <span className="text-4xl font-extrabold text-crimson">${Number(product.Price).toFixed(2)}</span>
+            <span className="text-4xl font-extrabold text-crimson">${displayPrice.toFixed(2)}</span>
           </div>
 
           {/* Qty + Add to Cart */}
@@ -390,7 +394,7 @@ export default function ProductDetail({
             </div>
             <button
               disabled={!inStock}
-              onClick={() => dispatch({ type: "ADD", product, qty })}
+              onClick={() => dispatch({ type: "ADD", product: productWithPrice, qty })}
               className="flex-1 flex items-center justify-center gap-2 h-12 bg-crimson hover:bg-crimson/90 disabled:bg-stone-200 dark:disabled:bg-stone-800 disabled:text-stone-400 text-white font-bold rounded-xl transition-colors text-sm"
             >
               <ShoppingCart size={16} />
@@ -401,7 +405,7 @@ export default function ProductDetail({
           {/* Add a Case */}
           {inStock && (
             <button
-              onClick={() => dispatch({ type: "ADD", product, qty: 6 })}
+              onClick={() => dispatch({ type: "ADD", product: productWithPrice, qty: 6 })}
               className="w-full flex items-center justify-center gap-2 border-2 border-crimson text-crimson hover:bg-crimson/5 font-bold h-12 rounded-xl transition-colors text-sm"
             >
               <ShoppingCart size={16} />

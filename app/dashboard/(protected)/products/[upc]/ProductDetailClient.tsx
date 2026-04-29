@@ -575,8 +575,8 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
               </label>
               <p className="text-[11px] text-stone-700 mb-2">
                 POS: <strong>${posPrice.toFixed(2)}</strong>
-                {Number(product.OnlinePrice) !== posPrice && (
-                  <> · Website: <strong>${Number(product.OnlinePrice).toFixed(2)}</strong></>
+                {initialOverride.onlinePrice && initialOverride.onlinePrice !== posPrice && (
+                  <> · Saved override: <strong>${initialOverride.onlinePrice.toFixed(2)}</strong></>
                 )}
               </p>
               <div className="relative">
