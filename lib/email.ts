@@ -1,21 +1,37 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// Gmail SMTP transporter — reused across requests
+let _transporter: nodemailer.Transporter | null = null;
 
-const FROM = process.env.EMAIL_FROM ?? "Stones River Beverages <no-reply@stonesriverbeer.com>";
+function getTransporter(): nodemailer.Transporter | null {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return null;
+  if (!_transporter) {
+    _transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+  }
+  return _transporter;
+}
+
+const FROM = process.env.GMAIL_USER
+  ? `Stones River Beverages <${process.env.GMAIL_USER}>`
+  : (process.env.EMAIL_FROM ?? "Stones River Beverages <no-reply@stonesriverbeer.com>");
 
 export async function sendEmail(opts: {
   to: string;
   subject: string;
   html: string;
 }): Promise<void> {
-  if (!resend) {
-    console.log("[email dev]", opts.subject, "→", opts.to);
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.log("[email dev — add GMAIL_USER + GMAIL_APP_PASSWORD]", opts.subject, "→", opts.to);
     return;
   }
-  await resend.emails.send({ from: FROM, ...opts });
+  await transporter.sendMail({ from: FROM, to: opts.to, subject: opts.subject, html: opts.html });
 }
 
 // ── Templates ────────────────────────────────────────────────────────────────
