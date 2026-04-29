@@ -125,7 +125,7 @@ interface Props {
 
 export default function ProductDetailClient({ product, initialOverride, cachedImageUrl, generatedDescription }: Props) {
   // Content
-  const [websiteName,  setWebsiteName]  = useState(initialOverride.websiteName  ?? "");
+  const [websiteName,  setWebsiteName]  = useState(initialOverride.websiteName  ?? product.ItemName);
   const [subtitle,     setSubtitle]     = useState(initialOverride.subtitle     ?? "");
   const [description,  setDescription]  = useState(initialOverride.description  ?? "");
   // Images
@@ -199,7 +199,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
     setSaved(false);
 
     const patch: ProductOverride = {};
-    if (websiteName.trim())  patch.websiteName  = websiteName.trim();
+    if (websiteName.trim() && websiteName.trim() !== product.ItemName) patch.websiteName = websiteName.trim();
     if (subtitle.trim())     patch.subtitle     = subtitle.trim();
     if (description.trim())  patch.description  = description.trim();
     if (imageUrl.trim())     patch.imageUrl     = imageUrl.trim();
@@ -392,12 +392,11 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-stone-900 mb-1.5">
-                    Display Name <span className="text-stone-600 font-normal">(leave blank to use POS name)</span>
+                    Display Name <span className="text-stone-600 font-normal">(edit to customize — clear to revert to POS name)</span>
                   </label>
                   <input
                     value={websiteName}
                     onChange={(e) => setWebsiteName(e.target.value)}
-                    placeholder={product.ItemName}
                     className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-50"
                   />
                 </div>
