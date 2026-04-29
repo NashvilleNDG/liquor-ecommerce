@@ -5,12 +5,15 @@ import bcrypt from "bcryptjs";
 const FILE = path.join(process.cwd(), "data", "users.json");
 
 export interface StoredUser {
-  id: string;
-  name: string;
-  email: string;
-  passwordHash: string;
-  createdAt: string;
-  points: number;
+  id:            string;
+  name:          string;
+  email:         string;
+  passwordHash:  string;
+  createdAt:     string;
+  points:        number;
+  emailVerified: boolean;
+  phone?:        string;
+  address?:      string;
 }
 
 export function loadUsers(): StoredUser[] {
@@ -33,12 +36,13 @@ export async function createUser(name: string, email: string, password: string):
   const users = loadUsers();
   const passwordHash = await bcrypt.hash(password, 10);
   const user: StoredUser = {
-    id: Math.random().toString(36).slice(2),
+    id:            Math.random().toString(36).slice(2),
     name,
-    email: email.toLowerCase(),
+    email:         email.toLowerCase(),
     passwordHash,
-    createdAt: new Date().toISOString(),
-    points: 0,
+    createdAt:     new Date().toISOString(),
+    points:        0,
+    emailVerified: false,
   };
   users.push(user);
   saveUsers(users);
@@ -50,4 +54,30 @@ export async function verifyUser(email: string, password: string): Promise<Store
   if (!user) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   return ok ? user : null;
+}
+
+export function markEmailVerified(email: string): boolean {
+  const users = loadUsers();
+  const idx   = users.findIndex((u) => u.email === email.toLowerCase());
+  if (idx === -1) return false;
+  users[idx].emailVerified = true;
+  saveUsers(users);
+  return true;
+}
+
+export function updateUser(id: string, patch: Partial<Pick<StoredUser, "name" | "phone" | "address">>): StoredUser | null {
+  const users = loadUsers();
+  const idx   = users.findIndex((u) => u.id === id);
+  if (idx === -1) return null;
+  users[idx] = { ...users[idx], ...patch };
+  saveUsers(users);
+  return users[idx];
+}
+
+export function addPoints(userId: string, pts: number): void {
+  const users = loadUsers();
+  const idx   = users.findIndex((u) => u.id === userId);
+  if (idx === -1) return;
+  users[idx].points = (users[idx].points || 0) + pts;
+  saveUsers(users);
 }

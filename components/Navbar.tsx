@@ -311,9 +311,16 @@ export default function Navbar() {
                       <ChevronDown size={12} className={`transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
                     </button>
                     {userMenuOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden z-50">
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden z-50">
                         <Link
-                          href="/orders"
+                          href="/account"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="block px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-crimson transition-colors"
+                        >
+                          My Account
+                        </Link>
+                        <Link
+                          href="/account/orders"
                           onClick={() => setUserMenuOpen(false)}
                           className="block px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-crimson transition-colors"
                         >

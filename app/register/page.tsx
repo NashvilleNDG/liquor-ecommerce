@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Wine } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -49,17 +48,8 @@ export default function RegisterPage() {
         setServerError(data.error ?? "Registration failed. Please try again.");
         return;
       }
-      // Auto sign-in after successful registration
-      const result = await signIn("credentials", {
-        email: email.trim(),
-        password,
-        redirect: false,
-      });
-      if (result?.error) {
-        setServerError("Account created but sign-in failed. Please go to the login page.");
-      } else {
-        router.push("/");
-      }
+      // Redirect to email verification page (password passed for auto-signin after verify)
+      router.push(`/verify-email?email=${encodeURIComponent(email.trim())}&pw=${encodeURIComponent(password)}`);
     } catch {
       setServerError("Something went wrong. Please try again.");
     } finally {

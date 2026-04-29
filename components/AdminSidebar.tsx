@@ -53,9 +53,10 @@ const NAV_GROUPS: {
   {
     label: "Customers",
     items: [
-      { href: "/dashboard/users",      icon: Users,     label: "Users"      },
-      { href: "/dashboard/newsletter", icon: Mail,      label: "Newsletter" },
-      { href: "/dashboard/campaigns",  icon: Megaphone, label: "Campaigns"  },
+      { href: "/dashboard/users",      icon: Users,          label: "Users"      },
+      { href: "/dashboard/reviews",    icon: ShoppingBag,    label: "Reviews"    },
+      { href: "/dashboard/newsletter", icon: Mail,           label: "Newsletter" },
+      { href: "/dashboard/campaigns",  icon: Megaphone,      label: "Campaigns"  },
     ],
   },
   {

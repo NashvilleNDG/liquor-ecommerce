@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import path from "path";
+import { requireAdmin } from "@/lib/require-admin";
 
 const FILE = path.join(process.cwd(), "data", "promo-codes.json");
 
@@ -10,10 +11,10 @@ export interface PromoCode {
   type:        "percent" | "fixed";
   value:       number;
   minOrder:    number;
-  maxUses:     number | null;  // null = unlimited
+  maxUses:     number | null;
   usedCount:   number;
   active:      boolean;
-  expiresAt:   string | null;  // ISO date or null
+  expiresAt:   string | null;
   createdAt:   string;
   description: string;
 }
@@ -35,11 +36,13 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
+
+  const body  = await req.json();
   const codes = load();
 
-  // Duplicate check
-  if (codes.find(c => c.code.toUpperCase() === body.code?.toUpperCase()))
+  if (codes.find((c) => c.code.toUpperCase() === body.code?.toUpperCase()))
     return NextResponse.json({ error: "Promo code already exists" }, { status: 409 });
 
   const code: PromoCode = {
@@ -61,14 +64,19 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
+
   const { id, ...updates } = await req.json();
-  const codes = load().map(c => c.id === id ? { ...c, ...updates } : c);
-  save(codes);
+  save(load().map((c) => (c.id === id ? { ...c, ...updates } : c)));
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
+
   const { id } = await req.json();
-  save(load().filter(c => c.id !== id));
+  save(load().filter((c) => c.id !== id));
   return NextResponse.json({ ok: true });
 }

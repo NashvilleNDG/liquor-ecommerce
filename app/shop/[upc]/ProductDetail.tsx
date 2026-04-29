@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, ChevronRight, MapPin, Truck, Star, Package, ChevronDown, ChevronUp, Share2, Facebook, Link2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import type { Product } from "@/lib/kanji-api";
 import type { CityHiveProductDetails } from "@/lib/cityhive-api";
 import { inferOrigin, COUNTRY_FLAG } from "@/lib/product-origin";
@@ -562,6 +563,154 @@ export default function ProductDetail({
               <ProductCard key={p.ItemUPC} product={p} />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Customer Reviews */}
+      <ReviewsSection upc={product.ItemUPC} />
+    </div>
+  );
+}
+
+// ── Reviews Section ────────────────────────────────────────────────────────
+function ReviewsSection({ upc }: { upc: string }) {
+  const { data: session } = useSession();
+  const [reviews, setReviews] = useState<{
+    id: string; userName: string; rating: number; title: string; body: string; createdAt: string;
+  }[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [rating, setRating]     = useState(5);
+  const [title, setTitle]       = useState("");
+  const [body, setBody]         = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitErr, setSubmitErr]   = useState("");
+  const [submitted, setSubmitted]   = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/reviews?upc=${encodeURIComponent(upc)}`)
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setReviews(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [upc]);
+
+  async function handleSubmitReview(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true); setSubmitErr("");
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ upc, rating, title, body }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setSubmitErr(data.error ?? "Failed to submit"); return; }
+      setSubmitted(true); setShowForm(false);
+    } catch {
+      setSubmitErr("Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const avg   = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+  const count = reviews.length;
+
+  return (
+    <div className="pt-6 border-t border-stone-200 dark:border-stone-800 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-stone-900 dark:text-white">Customer Reviews</h2>
+          {count > 0 && (
+            <p className="text-sm text-stone-500 mt-0.5">
+              {avg.toFixed(1)} out of 5 · {count} review{count !== 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+        {session && !submitted && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="text-sm font-semibold text-crimson border border-crimson/30 px-4 py-2 rounded-xl hover:bg-crimson/5 transition-colors"
+          >
+            Write a Review
+          </button>
+        )}
+        {!session && (
+          <Link href="/login" className="text-xs text-stone-500 hover:text-crimson transition-colors">
+            Sign in to review
+          </Link>
+        )}
+      </div>
+
+      {submitted && (
+        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 font-medium">
+          Thanks for your review! It will appear after approval.
+        </div>
+      )}
+
+      {showForm && (
+        <form onSubmit={handleSubmitReview} className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl p-5 space-y-4">
+          <div>
+            <p className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">Your Rating</p>
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map((s) => (
+                <button key={s} type="button" onClick={() => setRating(s)}>
+                  <Star size={28} className={s <= rating ? "text-amber-400 fill-amber-400" : "text-stone-300 fill-stone-300"} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-stone-500 mb-1">Review Title</label>
+            <input
+              value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={100}
+              placeholder="Summarize your experience"
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-crimson/50 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-stone-500 mb-1">Review</label>
+            <textarea
+              value={body} onChange={(e) => setBody(e.target.value)} required maxLength={1000} rows={4}
+              placeholder="What did you think?"
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-crimson/50 transition-colors resize-none"
+            />
+          </div>
+          {submitErr && <p className="text-red-500 text-sm">{submitErr}</p>}
+          <div className="flex gap-2">
+            <button type="submit" disabled={submitting} className="bg-crimson hover:bg-crimson/90 disabled:opacity-60 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
+              {submitting ? "Submitting…" : "Submit Review"}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2.5 border border-stone-200 rounded-xl text-sm text-stone-600 hover:bg-stone-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="text-center py-8 text-stone-400 text-sm">Loading reviews…</div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-8 text-stone-400 text-sm">
+          No reviews yet. Be the first to share your thoughts!
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((r) => (
+            <div key={r.id} className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} size={14} className={i < r.rating ? "text-amber-400 fill-amber-400" : "text-stone-200 fill-stone-200"} />
+                ))}
+                <span className="text-sm font-bold text-stone-900 dark:text-white">{r.title}</span>
+              </div>
+              <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-2">{r.body}</p>
+              <p className="text-xs text-stone-400">
+                {r.userName} · {new Date(r.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              </p>
+            </div>
+          ))}
         </div>
       )}
     </div>

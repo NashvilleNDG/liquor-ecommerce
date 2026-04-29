@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readOverrides, upsertOverride, deleteOverride } from "@/lib/product-overrides";
+import { requireAdmin } from "@/lib/require-admin";
 
 export async function GET() {
   return NextResponse.json(readOverrides());
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await req.json();
     const { upc, ...patch } = body;
@@ -18,6 +21,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const { upc } = await req.json();
     if (!upc) return NextResponse.json({ error: "upc required" }, { status: 400 });

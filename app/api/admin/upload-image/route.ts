@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from "fs";
 import path from "path";
+import { requireAdmin } from "@/lib/require-admin";
 
-const IMAGES_DIR  = path.join(process.cwd(), "data", "product-images");
-const CACHE_FILE  = path.join(process.cwd(), "data", "product-images-cache.json");
+const IMAGES_DIR = path.join(process.cwd(), "data", "product-images");
+const CACHE_FILE = path.join(process.cwd(), "data", "product-images-cache.json");
+
+const ALLOWED_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png":  "png",
+  "image/webp": "webp",
+  "image/gif":  "gif",
+};
+
+const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 function loadCache(): Record<string, string | null> {
   try {
@@ -17,6 +27,9 @@ function saveCache(cache: Record<string, string | null>) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const formData = await req.formData();
     const upc  = formData.get("upc") as string;
@@ -30,7 +43,11 @@ export async function POST(req: NextRequest) {
     let imageUrl: string;
 
     if (file && file.size > 0) {
-      const ext    = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      if (file.size > MAX_SIZE)
+        return NextResponse.json({ error: "File too large (max 10 MB)" }, { status: 400 });
+      const ext = ALLOWED_TYPES[file.type];
+      if (!ext)
+        return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
       const buffer = Buffer.from(await file.arrayBuffer());
       const fname  = `${upc}.${ext}`;
       writeFileSync(path.join(IMAGES_DIR, fname), buffer);
@@ -52,6 +69,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
+
   const { upc } = await req.json();
   if (!upc) return NextResponse.json({ error: "UPC required" }, { status: 400 });
   const cache = loadCache();
