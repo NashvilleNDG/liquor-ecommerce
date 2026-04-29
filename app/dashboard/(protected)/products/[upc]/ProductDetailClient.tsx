@@ -153,8 +153,10 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
   const [saved,   setSaved]   = useState(false);
   const [error,   setError]   = useState("");
   const [copied,  setCopied]  = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading,     setUploading]     = useState(false);
+  const [addlUploading, setAddlUploading] = useState(false);
+  const fileRef     = useRef<HTMLInputElement>(null);
+  const addlFileRef = useRef<HTMLInputElement>(null);
 
   const posPrice    = Number(product.Price);
   const basePrice   = onlinePrice && !isNaN(Number(onlinePrice)) ? Number(onlinePrice) : posPrice;
@@ -183,6 +185,20 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
       else setError(data.error ?? "Upload failed");
     } catch { setError("Upload failed"); }
     finally   { setUploading(false); }
+  }
+
+  async function handleAddlUpload(file: File) {
+    setAddlUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res  = await fetch(`/api/products/image-addl/${product.ItemUPC}`, { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.imageUrl) setAddlImages((prev) => [...prev, data.imageUrl]);
+      else setError(data.error ?? "Upload failed");
+    } catch { setError("Upload failed"); }
+    finally   { setAddlUploading(false); }
   }
 
   function addAdditionalImage() {
@@ -232,25 +248,38 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
 
   async function copyUrl() {
     const full = `${window.location.origin}${productUrl}`;
-    try {
-      if (navigator.clipboard?.writeText) {
+
+    // Stage 1: modern clipboard API (works on localhost + HTTPS)
+    if (navigator.clipboard?.writeText) {
+      try {
         await navigator.clipboard.writeText(full);
-      } else {
-        const ta = document.createElement("textarea");
-        ta.value = full;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-      }
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setError("Could not copy — please copy manually: " + full);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      } catch { /* fall through */ }
     }
+
+    // Stage 2: legacy execCommand fallback
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = full;
+      ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.setSelectionRange(0, full.length);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (ok) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      }
+    } catch { /* fall through */ }
+
+    // Stage 3: show URL prominently for manual copy
+    setError(`Copy this URL: ${full}`);
   }
 
   const DEPT_EMOJI: Record<string, string> = {
@@ -376,14 +405,42 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                     </button>
                   </div>
                 ))}
-                {/* Add slot */}
-                <div className="aspect-square bg-white border-2 border-dashed border-stone-200 rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors"
-                  onClick={() => document.getElementById("addlUrlInput")?.focus()}
+                {/* Add slot — opens file picker */}
+                <div
+                  className="aspect-square bg-white border-2 border-dashed border-stone-200 rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors"
+                  onClick={() => addlFileRef.current?.click()}
                 >
-                  <Plus size={18} className="text-stone-600" />
-                  <span className="text-[10px] text-stone-600">Add</span>
+                  {addlUploading
+                    ? <span className="text-[10px] text-stone-600">Uploading…</span>
+                    : <><Plus size={18} className="text-stone-600" /><span className="text-[10px] text-stone-600">Add</span></>
+                  }
                 </div>
               </div>
+
+              {/* Hidden file input for additional images */}
+              <input
+                type="file"
+                ref={addlFileRef}
+                accept="image/*"
+                multiple
+                className="sr-only"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? []);
+                  files.forEach((f) => handleAddlUpload(f));
+                  e.target.value = "";
+                }}
+              />
+
+              {/* Upload button + URL input */}
+              <button
+                type="button"
+                onClick={() => addlFileRef.current?.click()}
+                disabled={addlUploading}
+                className="w-full flex items-center justify-center gap-2 border border-stone-200 rounded-lg py-2 text-xs font-semibold text-stone-900 hover:bg-stone-50 transition-colors mb-2"
+              >
+                <Upload size={13} /> {addlUploading ? "Uploading…" : "Upload from computer"}
+              </button>
+
               <div className="flex gap-2">
                 <input
                   id="addlUrlInput"
@@ -391,11 +448,11 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                   value={imageUrlDraft}
                   onChange={(e) => setImageUrlDraft(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addAdditionalImage()}
-                  placeholder="Paste image URL and press Enter…"
+                  placeholder="Or paste image URL and press Enter…"
                   className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-400"
                 />
                 <button onClick={addAdditionalImage} className="px-3 py-2 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors">
-                  <Plus size={14} className="text-stone-600" />
+                  <Plus size={14} className="text-stone-900" />
                 </button>
               </div>
             </Section>
@@ -507,7 +564,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
               <p className="text-[11px] text-stone-700 mb-2">
                 POS: <strong>${posPrice.toFixed(2)}</strong>
                 {Number(product.OnlinePrice) !== posPrice && (
-                  <> · Kanji: <strong>${Number(product.OnlinePrice).toFixed(2)}</strong></>
+                  <> · Website: <strong>${Number(product.OnlinePrice).toFixed(2)}</strong></>
                 )}
               </p>
               <div className="relative">
