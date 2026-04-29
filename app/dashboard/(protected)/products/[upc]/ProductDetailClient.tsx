@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { Product } from "@/lib/kanji-api";
 import type { ProductOverride, ProductDiscount } from "@/lib/product-overrides";
+import { inferOrigin } from "@/lib/product-origin";
 
 // ── Preset taxonomy suggestions per department ──────────────────────────────
 const TYPE_PRESETS: Record<string, string[]> = {
@@ -136,14 +137,14 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
   const [types,        setTypes]        = useState<string[]>(initialOverride.types    ?? []);
   const [subTypes,     setSubTypes]     = useState<string[]>(initialOverride.subTypes ?? []);
   const [brand,        setBrand]        = useState(initialOverride.brand    ?? "");
-  const [country,      setCountry]      = useState(initialOverride.country  ?? "");
+  const [country,      setCountry]      = useState(initialOverride.country  ?? inferOrigin(product.ItemName, product.Department).country ?? "");
   const [region,       setRegion]       = useState(initialOverride.region   ?? "");
   const [varietal,     setVarietal]     = useState(initialOverride.varietal ?? "");
   // Merchandising
   const [hidden,       setHidden]       = useState(initialOverride.hidden    ?? false);
   const [featured,     setFeatured]     = useState(initialOverride.featured  ?? false);
   const [label,        setLabel]        = useState(initialOverride.label     ?? "");
-  const [onlinePrice,  setOnlinePrice]  = useState(initialOverride.onlinePrice?.toString() ?? "");
+  const [onlinePrice,  setOnlinePrice]  = useState(initialOverride.onlinePrice?.toString() ?? Number(product.Price).toFixed(2));
   const [discount,     setDiscount]     = useState<ProductDiscount | null>(initialOverride.discount ?? null);
   const [discountType, setDiscountType] = useState<"percent" | "fixed">(initialOverride.discount?.type ?? "percent");
   const [discountVal,  setDiscountVal]  = useState(initialOverride.discount?.value?.toString() ?? "");
@@ -213,7 +214,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
     if (hidden)              patch.hidden       = true;
     if (featured)            patch.featured     = true;
     if (label)               patch.label        = label;
-    if (onlinePrice && !isNaN(Number(onlinePrice))) patch.onlinePrice = Number(onlinePrice);
+    if (onlinePrice && !isNaN(Number(onlinePrice)) && Number(onlinePrice) !== posPrice) patch.onlinePrice = Number(onlinePrice);
     if (hasDiscount) patch.discount = { type: discountType, value: Number(discountVal) };
 
     try {
@@ -515,11 +516,10 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                   type="number" step="0.01" min="0"
                   value={onlinePrice}
                   onChange={(e) => setOnlinePrice(e.target.value)}
-                  placeholder={posPrice.toFixed(2)}
                   className="w-full border border-stone-200 rounded-xl pl-7 pr-3 py-2.5 text-sm text-stone-900 focus:outline-none focus:border-amber-400"
                 />
               </div>
-              {onlinePrice && !isNaN(Number(onlinePrice)) && (
+              {onlinePrice && !isNaN(Number(onlinePrice)) && Number(onlinePrice) !== posPrice && (
                 <p className="text-xs text-amber-600 mt-1.5 font-semibold">Customers see: ${Number(onlinePrice).toFixed(2)}</p>
               )}
             </div>
