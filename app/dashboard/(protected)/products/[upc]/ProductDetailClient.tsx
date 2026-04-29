@@ -232,9 +232,25 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
 
   async function copyUrl() {
     const full = `${window.location.origin}${productUrl}`;
-    await navigator.clipboard.writeText(full);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(full);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = full;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Could not copy — please copy manually: " + full);
+    }
   }
 
   const DEPT_EMOJI: Record<string, string> = {
