@@ -1,20 +1,11 @@
 import { fetchProducts } from "@/lib/kanji-api";
 import { getVariants, deduplicateByVariant } from "@/lib/product-variants";
-import { getProductImage } from "@/lib/product-images";
-import { existsSync, readFileSync } from "fs";
-import path from "path";
+import { loadImageCache, resolveProductImage } from "@/lib/image-cache";
+import { readOverrides } from "@/lib/product-overrides";
 import { notFound } from "next/navigation";
 import ProductDetail from "./ProductDetail";
 
 export const revalidate = 300;
-
-function loadImageCache(): Record<string, string | null> {
-  try {
-    const file = path.join(process.cwd(), "data", "product-images-cache.json");
-    if (!existsSync(file)) return {};
-    return JSON.parse(readFileSync(file, "utf-8"));
-  } catch { return {}; }
-}
 
 export default async function ProductPage({ params }: { params: Promise<{ upc: string }> }) {
   const { upc: rawUpc } = await params;
@@ -35,8 +26,23 @@ export default async function ProductPage({ params }: { params: Promise<{ upc: s
     )
   ).slice(0, 6);
 
-  const imageCache = loadImageCache();
-  const imageUrl = getProductImage(upc) ?? imageCache[upc] ?? null;
+  const [imageCache, overrides] = await Promise.all([
+    Promise.resolve(loadImageCache()),
+    Promise.resolve(readOverrides()),
+  ]);
 
-  return <ProductDetail product={product} variants={variants} related={related} cityhive={null} imageUrl={imageUrl} />;
+  const override  = overrides[upc] ?? {};
+  const imageUrl  = resolveProductImage(upc, override.imageUrl, imageCache);
+
+  return (
+    <ProductDetail
+      product={product}
+      variants={variants}
+      related={related}
+      cityhive={null}
+      imageUrl={imageUrl}
+      overrideDescription={override.description ?? null}
+      overrideName={override.websiteName ?? null}
+    />
+  );
 }

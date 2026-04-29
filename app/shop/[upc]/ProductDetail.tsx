@@ -141,12 +141,16 @@ export default function ProductDetail({
   related,
   cityhive,
   imageUrl,
+  overrideDescription,
+  overrideName,
 }: {
   product: Product;
   variants: Product[];
   related: Product[];
   cityhive: CityHiveProductDetails | null;
   imageUrl?: string | null;
+  overrideDescription?: string | null;
+  overrideName?: string | null;
 }) {
   const { dispatch } = useCart();
   const { dispatch: wDispatch, isWishlisted } = useWishlist();
@@ -206,8 +210,8 @@ export default function ProductDetail({
     dept === "Wines" || dept === "WINE" ? "Wine" :
     dept === "LIQUOR" ? "Spirits" : dept;
 
-  // Description: prefer CityHive, fall back to generated
-  const description = cityhive?.description ||
+  // Description: prefer admin override, then CityHive, then auto-generated
+  const description = overrideDescription || cityhive?.description ||
     generateFallbackDescription(product.ItemName, product.Department, product.Size || "", country, state);
 
   // Badges: country + state flags
@@ -231,7 +235,7 @@ export default function ProductDetail({
       {/* ── Product Title ── */}
       <div className="space-y-1.5">
         <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-white leading-tight">
-          {product.ItemName}
+          {overrideName || product.ItemName}
         </h1>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-500">
           {brand && <span className="text-crimson font-semibold">{brand}</span>}
