@@ -128,7 +128,7 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
   // Content
   const [websiteName,  setWebsiteName]  = useState(initialOverride.websiteName  ?? product.ItemName);
   const [subtitle,     setSubtitle]     = useState(initialOverride.subtitle     ?? "");
-  const [description,  setDescription]  = useState(initialOverride.description  ?? "");
+  const [description,  setDescription]  = useState(initialOverride.description  ?? generatedDescription ?? "");
   // Images
   const [imageUrl,     setImageUrl]     = useState(initialOverride.imageUrl ?? cachedImageUrl ?? "");
   const [addlImages,   setAddlImages]   = useState<string[]>(initialOverride.additionalImages ?? []);
@@ -415,30 +415,14 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
 
             {/* Description */}
             <Section title="Description" hint="Shown on product page">
-              {/* Live preview — what customers currently see */}
-              {!description.trim() && generatedDescription && (
-                <div className="mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-                  <p className="text-[11px] font-semibold text-amber-700 mb-1.5">Currently shown on website (auto-generated):</p>
-                  <p className="text-xs text-stone-800 leading-relaxed">{generatedDescription}</p>
-                  <button
-                    type="button"
-                    onClick={() => setDescription(generatedDescription)}
-                    className="mt-2 text-[11px] font-semibold text-amber-700 hover:text-amber-900 underline"
-                  >
-                    Copy to editor to customize
-                  </button>
-                </div>
-              )}
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder={generatedDescription ?? "Write a compelling description for this product…"}
-                rows={5}
+                placeholder="Write a compelling description for this product…"
+                rows={6}
                 className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-50 resize-none leading-relaxed"
               />
-              <p className="text-[11px] text-stone-600 mt-1.5">
-                {description.trim() ? `${description.length} characters — overrides auto-generated description` : "Leave blank to use auto-generated description"}
-              </p>
+              <p className="text-[11px] text-stone-600 mt-1.5">{description.length} characters</p>
             </Section>
 
             {/* Types + Sub Types */}
