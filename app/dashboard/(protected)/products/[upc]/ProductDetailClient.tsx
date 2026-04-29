@@ -349,7 +349,11 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
 
             {/* Primary image */}
             <Section title="Primary Image" hint="Shown everywhere">
-              <div className="aspect-square bg-white border border-stone-200 rounded-xl flex items-center justify-center overflow-hidden relative mb-4">
+              {/* Hero box — click to upload a new primary image */}
+              <div
+                className="aspect-square bg-white border border-stone-200 rounded-xl flex items-center justify-center overflow-hidden relative mb-3 cursor-pointer group"
+                onClick={() => fileRef.current?.click()}
+              >
                 {imageUrl ? (
                   <Image src={imageUrl} alt={product.ItemName} fill sizes="300px" className="object-contain p-4" unoptimized />
                 ) : (
@@ -358,37 +362,45 @@ export default function ProductDetailClient({ product, initialOverride, cachedIm
                     <p className="text-xs text-stone-700">No image yet</p>
                   </div>
                 )}
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                  <div className="flex flex-col items-center gap-1 text-white">
+                    <Upload size={22} />
+                    <span className="text-xs font-semibold">{uploading ? "Uploading…" : imageUrl ? "Change image" : "Upload image"}</span>
+                  </div>
+                </div>
+                {/* Clear button */}
                 {imageUrl && (
                   <button
-                    onClick={() => setImageUrl("")}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-red-500 shadow-sm transition-colors"
+                    onClick={(e) => { e.stopPropagation(); setImageUrl(""); }}
+                    className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-red-500 shadow-sm transition-colors z-10"
                   >
                     <X size={13} />
                   </button>
                 )}
               </div>
 
-              <p className="text-[11px] text-stone-600 mb-2">⚠ Use images without backgrounds or trademarks for best quality</p>
+              <input type="file" ref={fileRef} accept="image/*" className="sr-only"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }}
+              />
 
-              <div className="space-y-2">
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="Paste image URL…"
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-amber-400"
-                />
-                <input type="file" ref={fileRef} accept="image/*" className="sr-only"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); }}
-                />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading}
-                  className="w-full flex items-center justify-center gap-2 border border-stone-200 rounded-lg py-2 text-xs font-semibold text-stone-900 hover:bg-stone-50 transition-colors"
-                >
-                  <Upload size={13} /> {uploading ? "Uploading…" : "Upload from computer"}
-                </button>
-              </div>
+              {/* Additional images as selectable thumbnails */}
+              {addlImages.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {addlImages.map((url, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setImageUrl(url)}
+                      title="Set as primary image"
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${imageUrl === url ? "border-amber-400" : "border-stone-200 hover:border-amber-300"}`}
+                    >
+                      <div className="relative w-full h-full">
+                        <Image src={url} alt="" fill sizes="80px" className="object-contain p-1" unoptimized />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </Section>
 
             {/* Additional images */}
